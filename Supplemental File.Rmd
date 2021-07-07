@@ -1,0 +1,368 @@
+---
+bibliography: Supplemental_file.bib
+biblio-style: apalike
+highlight_bw: yes
+output:
+  rmarkdown::pdf_document:
+    includes:
+        in_header: header.tex 
+    dev: "cairo_pdf"
+    latex_engine: xelatex
+    fig_caption: yes
+---
+
+**Supplemental File of**
+
+#  ggmsa: an R package for visualizing publication-quality multiple sequence alignment
+
+\renewcommand{\figurename}{Fig.}
+
+\newcommand{\beginsupplement}{%
+        \setcounter{table}{0}
+        \renewcommand{\thetable}{S\arabic{table}}%
+        \setcounter{figure}{0}
+        \renewcommand{\thefigure}{S\arabic{figure}}%
+     }
+
+\beginsupplement
+
+
+
+```{r message=FALSE, warning=FALSE, echo = FALSE}
+library(ggmsa)
+library(ggplot2)
+library(ggtree)
+library(gggenes)
+library(ape)
+library(Biostrings)
+library(ggnewscale)
+library(dplyr)
+
+protein_sequences <- system.file("extdata", "sample.fasta", package = "ggmsa")
+nt_sequence <- system.file("extdata", "LeaderRepeat_All.fa", package = "ggmsa")
+miRNA_sequences <- system.file("extdata", "seedSample.fa", package = "ggmsa")
+tp53_sequences <-  system.file("extdata", "tp53.fa", package = "ggmsa")
+tp53_genes <- system.file("extdata", "TP53_genes.xlsx", package = "ggmsa")
+
+
+library(knitr)
+knit_hooks$set(crop = hook_pdfcrop)
+opts_chunk$set(crop = TRUE)
+```
+
+
+## Fig. \ref{fig:custom}: Example of a custom color scheme
+
+Customizing the color scheme is allowed. Users can create a data frame with two columns named `names` and `color`. This data frame includes symbols of character and coloring code (see below). 
+
+```{r  warning = FALSE, message = FALSE}
+library(RColorBrewer)
+library(pals)
+protein_sequences <- system.file("extdata", "sample.fasta", package = "ggmsa")
+my_pal <- colorRampPalette(rev(brewer.pal(n = 9, name = "Reds")))
+my_cutstom <- data.frame(names = c(LETTERS[1:26],"-"), 
+                         color = my_pal(27), 
+                         stringsAsFactors = F)
+head(my_cutstom)
+```
+
+```{r custom, fig.height = 2, fig.width = 8, warning = FALSE, message = FALSE, fig.cap="\\label{fig:custom}By assigning color codes for each character, ggmsa enables users to customize color schemes. It applies equally to sequence logos."}
+ggmsa(protein_sequences, 300, 345, 
+      custom_color = my_cutstom, 
+      char_width = 0.5, 
+      border = "white")
+```
+
+
+## Fig. \ref{fig:color_scheme}: Examples of amino acid and nucleotide color schemes in ggmsa
+```{r color_scheme, echo=FALSE, fig.height=9, fig.width=8, fig.cap="\\label{fig:color_scheme} (A) Examples of amino acid color schemes. Schemes are either quantitative, reflecting empirical or statistical properties of amino acids; or qualitative, reflecting physicochemical attributes. Chemistry is colored according to side-chain chemistry also used in DNASTAR applications; Shapely matches the RasMol amino acid color schemes, which are, in turn, based on Robert Fletterick’s Shapely models. Zappo is a qualitative scheme developed by M. Clamp. The residues are colored according to their physicochemical properties; Taylor is taken from Taylor and is also used in JalView; Hydrophobicity colors the residues in the alignment based on the hydrophobicity table. B, X, Z, J, O, and U are amino acid ambiguity codes: B is aspartate or asparagine; Z is glutamate or glutamine; X, J, O, U is an unknown (or ‘other’); “-” indicate a gap. (B) Examples of nucleotide color schemes used by ggmsa."}
+
+library(patchwork)
+scheme_AA <- ggmsa:::scheme_AA
+scheme_NT <- ggmsa:::scheme_NT
+
+scheme_AA <- scheme_AA[, - 6]
+scheme_AA$char <- row.names(scheme_AA)
+
+order_char <- c("A","R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M",
+                "F","P", "S", "T", "W", "Y", "V", "B", "X", "Z", "J", "O", "U", "-")
+
+scheme_AA$char <- factor(scheme_AA$char, levels = rev(order_char))
+my_scheme <- tidyr::gather(scheme_AA, key = scheme, value = color, -char)
+
+my_scheme$scheme <- factor(my_scheme$scheme, levels = c("Chemistry_AA","Shapely_AA","Zappo_AA","Taylor_AA","Hydrophobicity" ,"LETTER" ))
+my_scheme[my_scheme$color == "","color"] <- NA
+
+p1_sch <- ggplot(data = my_scheme, aes_(x =~ scheme, y =~ char, fill =~ I(color))) + geom_tile(color = "#f5f5f5", size = 2) +
+    ylab("Amino acid") + xlab(NULL) +
+    scale_x_discrete(position = "top") +
+    theme(axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 0),
+          panel.background = element_blank()) +
+    coord_fixed(ratio = 0.7)
+
+scheme_NT$char <- row.names(scheme_NT)
+order_charNT <- c("A", "C", "G", "T", "U", "-")
+scheme_NT$char <- factor(scheme_NT$char, levels = rev(order_charNT))
+my_schemeNT <- tidyr::gather(scheme_NT, key = scheme, value = color, -char)
+
+#########################NT colors##################
+p2_sch <- ggplot(data = my_schemeNT, aes_(x =~ scheme, y =~ char, fill =~ I(color))) + geom_tile(color = "#f5f5f5", size = 2) +
+  ylab("Nucleotide") + xlab(NULL) +
+  scale_x_discrete(position = "top") +
+  theme(axis.ticks = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 0),
+        panel.background = element_blank()) +
+  coord_fixed(ratio = c(1.5))
+
+
+(p1_sch | (p2_sch / plot_spacer()))+ plot_annotation(tag_levels = 'A')
+```
+
+\newpage
+
+
+
+## Fig. \ref{fig:birds_eye}: Bird's-eyes view in ggmsa
+
+```{r birds_eye, fig.height = 1.5,fig.width = 11, message=F, fig.cap="\\label{fig:birds_eye}A compact overview MSA showing a bird’s eye view of the full alignment of  the Cripavirus Internal Ribosomal Entry Site [family RF00458 from the RFAM database]."}
+RF00458_msa <- rfaRm::rfamSeedAlignment("RF00458", format = "fasta")
+ggmsa(RF00458_msa, font = NULL, border = NA, seq_name = F, color = "Chemistry_NT") + 
+  coord_cartesian()
+```
+
+
+## Fig. \ref{fig:by_conse}: The shading methods: by_conservation 
+```{r by_conse, fig.height = 4, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:by_conse}Example of 'by_conservation' view for MSA. This example shows the results of first coloring by 'hydrophobicity' then performing conservation analysis. Sequence alignment has the most conserved near 330 sites."}
+ggmsa(protein_sequences, 300, 350, color = "Hydrophobicity", 
+      font = NULL, seq_name = T ,border = "white", by_conservation = T)
+```
+
+
+## Fig. \ref{fig:logo}: Protein sequence logos annotation for MSA
+
+`geom_seqlogo()` module is used to display sequence logos between 300 and 350 sites. Sequence logos also play a major role in
+visualizing DNA, RNA, and protein binding sites. The `+` can be used to link main function `ggmsa()` and `geom_seqlogo()` module.
+```{r logo, fig.height = 2, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:logo}Automatically generated protein sequence logos for MSA."}
+ggmsa(protein_sequences, 300, 350, char_width = 0.5, seq_name = T ) + 
+    geom_seqlogo(color = "Chemistry_AA")
+```
+
+
+
+## Fig. \ref{fig:gc}: DNA sequence logos and GC-content annotation for MSA
+
+`geom_GC()` module calculating the GC-content in DNA/RNA sequences. The sizes of bubbles are identical with GC-content.
+```{r gc, fig.height = 4, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:gc}Example of DNA sequence logos (top) and GC-content (right) automatically generated by ggmsa.The size of the bubbles determined the GC content of each sequence."}
+nt_sequence <- system.file("extdata", "LeaderRepeat_All.fa", package = "ggmsa")
+ggmsa(nt_sequence,font = NULL, color = "Chemistry_NT") + 
+    geom_seqlogo(color = "Chemistry_NT") + geom_GC() + theme(legend.position = "none")
+```
+
+\newpage
+
+## Fig. \ref{fig:seed1}: miRNA sequence seed region annotation for MSA (asterisks)
+
+`geom_seed()` helps to identify microRNA seed region by asterisks or shaded area. The seed region is a conserved heptameric sequence that is mostly situated at positions 2-7 from the miRNA 5´-end.
+```{r seed1, fig.height = 3, fig.width = 8, warning = FALSE, fig.cap="\\label{fig:seed1}Example of highlighting miRNA seed region. Asterisks are used for marking the seed region. "}
+miRNA_sequences <- system.file("extdata", "seedSample.fa", package = "ggmsa")
+ggmsa(miRNA_sequences, char_width = 0.5, color="Chemistry_NT") + 
+    geom_seed(seed = "GAGGUAG", star = TRUE)
+```
+
+
+## Fig. \ref{fig:seed2}: miRNA sequence seed region annotation for MSA (The shaded block)
+
+```{r seed2, fig.height = 3, fig.width = 8, warning = FALSE, fig.cap="\\label{fig:seed2}Example of highlighting miRNA seed region. Annotation of sequence seed region with the shaded block"}
+ggmsa(miRNA_sequences, char_width = 0.5, seq_name = T, none_bg = TRUE) + 
+    geom_seed(seed = "GAGGUAG")
+```
+
+\newpage
+
+## Fig. \ref{fig:conse}: A Consensus line annotation for MSA 
+
+```{r conse, fig.height = 4, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:conse}Example of consensus view for MSA. The consensus sequence is displayed above the alignment and shows which residues are conserved, which residues are variable. A consensus is constructed from the most frequent residues at each site."}
+ggmsa(protein_sequences, 300, 350, char_width = 0.5, 
+      seq_name = T, consensus_views = T, use_dot = T)
+```
+
+
+
+## Fig. \ref{fig:gghelix}: RNA secondary structure visulization using ggmsa
+
+ggmsa supports plotting RNA secondary structure as arc diagram by reference to R4RNA [@2012R]. The ‘overlapping structure diagram’ helps to  compare RNA secondary structure between R FAM database (known) and base-pair predicted by T RANSAT. The structure shown above the horizontal sequence is the known structure, colored by P-value if correctly predicted by T RANSAT (best in dark blue and worst in light blue).
+
+```{r gghelix, fig.height = 3, fig.width = 8, warning = FALSE, fig.cap="\\label{fig:gghelix}An example of an overlapping structure diagram, showing the Cripavirus Internal Ribosomal Entry Site. The structure shown above the horizontal sequence is known and  the structure below  is predicted by T RANSAT"}
+transat_file <- system.file("extdata", "helix.txt", package = "R4RNA")
+known_file <- system.file("extdata", "vienna.txt", package = "R4RNA")
+
+known <- readSSfile(known_file, type = "Vienna" )
+transat <- readSSfile(transat_file, type = "Helix" )
+#gghelix(known)
+gghelix(list(known = known, predicted = transat), color_by = "value", overlap = T)
+```
+
+
+
+\newpage
+
+## Fig. \ref{fig:facet}: Break down sequences
+
+`facet_msa()` module allows to showing more alignment data in a restricted canvas. The long sequence is broken down and displayed in several lines.
+```{r facet, fig.height = 6, fig.width = 10, message=FALSE, warning=FALSE, fig.cap="\\label{fig:facet}Example of a breakdown sequence. The long sequence is broken down and displayed in several lines."}
+ # 4 fields
+ ggmsa(protein_sequences, start = 0, end = 400, font = NULL, color = "Chemistry_AA") + 
+    facet_msa(field = 100)
+```
+
+\newpage
+
+## Fig. \ref{fig:treeExtra}: MSA view with circular layout tree
+
+A specific layout of the alignment can also be displayed by linking ggtreeExtra [@ggtreeExtra]. `geom_fruit` will automatically align MSA graphs to the tree with circular layout 
+```{r treeExtra, fig.height=5, fig.width =5, message = FALSE, warning= FALSE, fig.cap="\\label{fig:treeExtra}Example of MSA view with circular layout phylogenetic tree."}
+library(ggtree)
+library(ggtreeExtra)
+sequences <- system.file("extdata", "sequence-link-tree.fasta", package = "ggmsa")
+
+x <- readAAStringSet(sequences)
+d <- as.dist(stringDist(x, method = "hamming")/width(x)[1])
+tree <- bionj(d)
+data <- tidy_msa(x, 120, 200)
+
+p1 <- ggtree(tree, layout = 'circular') + 
+    geom_tiplab(align = TRUE, offset = 0.545, size = 2) + 
+        xlim(NA, 1.3)
+p1 + geom_fruit(data = data, geom = geom_msa, offset = 0, 
+                pwidth = 1.2, font = NULL, border = NA)
+```
+
+\newpage
+
+
+## Fig. \ref{fig:tree}: Visualize MSA with phylogenetic tree
+
+ggmsa supports to link ggtree [@yu2017ggtree] by `geom_facet()`. Sequence order will automatically align with left nodes.
+```{r tree, fig.height = 3, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:tree}A tree resulting from the application of phylogenetic analysis to the alignment."}
+ x <- readAAStringSet(protein_sequences)
+ d <- as.dist(stringDist(x, method = "hamming")/width(x)[1])
+ library(ape)
+ tree <- bionj(d)
+ library(ggtree)
+ p <- ggtree(tree) + geom_tiplab()
+
+ data = tidy_msa(x)
+ p + geom_facet(geom = geom_msa, data = data,  panel = 'msa',
+                font = NULL, border = NA, color = "Chemistry_AA") +
+     xlim_tree(1)
+```
+
+\newpage
+
+
+
+##  Fig. 3A: An example of MSA visualization and MSA annotations (R code) 
+```{r fig.height = 3, fig.width = 11, warning = FALSE, message = FALSE}
+ ggmsa(protein_sequences, 221, 280, seq_name = TRUE, char_width = 0.5) + 
+    geom_seqlogo(color = "Chemistry_AA") + 
+        geom_msaBar()
+```
+**Fig. 3A**|A local visualization of the sequence alignment of the phenylalanine hydroxylase protein (PH4H) within nine species. The center panel is the main MSA plot with residues in the alignment colored according to the Chemistry color scheme (amino acids are colored according to their sidechain chemistry). The Top and bottom panels are corresponding annotations with MSAs, showing the conservation patterns at each position by sequence logos and the distribution of the high-frequency residue by a bar chart, respectively.
+
+&nbsp;
+
+##  Fig. 3B: An example of one of method to implement graphical combination. (R code) 
+```{r fig.height=4, fig.width=14, message=FALSE, warning=FALSE}
+library(phangorn)
+#tree
+dat <- read.aa(tp53_sequences, format = "fasta") %>% phyDat(type = "AA", levels = NULL)
+tree <- dist.ml(dat, model = "JTT") %>% bionj()
+dd <- ggimage::phylopic_uid(tree$tip.label)
+
+p_tp53 <- ggtree(tree, branch.length = 'none') %<+% dd + 
+  geom_tiplab(aes(image=uid), geom = "phylopic", offset =1.9) +
+  geom_tiplab(aes(label=label)) 
+#msa
+data_53 <- readAAMultipleAlignment(tp53_sequences) %>% tidy_msa()
+#gene maps
+TP53_arrow <- readxl::read_xlsx(tp53_genes)
+TP53_arrow$direction <- 1
+TP53_arrow[TP53_arrow$strand == "reverse","direction"] <- -1
+
+#color
+mapping = aes(xmin = start, xmax = end, fill = gene, forward = direction)
+my_pal <- colorRampPalette(rev(brewer.pal(n = 10, name = "Set3")))
+
+#tree + gene maps + msa
+pb <- p_tp53  + xlim_tree(4) +
+    geom_facet(geom = geom_msa, data = data_53,
+               panel = 'msa', font = NULL,
+                  border = NA) +
+    new_scale_fill() +
+    scale_fill_manual(values = my_pal(10)) +
+    geom_facet(geom = geom_motif,
+               mapping = mapping, data = TP53_arrow,
+               panel = 'genes',  on = 'TP53',
+               arrowhead_height = unit(3, "mm"),
+               arrowhead_width = unit(1, "mm"))
+
+facet_widths(pb, c(Tree = 0.35, genes = 0.3))
+```
+**Fig. 3B**|The external data, genome locus, in conjunction with the MSA-tree plot. Comparative genome locus structure (genes panel), sequence alignment of TP53 protein (msa panel) and the corresponding phylogenetic tree (Tree panel) among six organisms. The local genome map shows the 30000 sites around the TP53 gene, and the phylogenetic tree that represents evolutionary relationships of TP53 protein was inferred using the Neighbor-Joining method based on the evolutionary distances of JTT matrix-based method. The Danio rerio shows strong inconsistent in the alignment and remote evolutionary relationships in the tree comparing other organisms. And the inconsistent is also discovered in local genome map panel (e.g. linkage disequilibrium of TP53-WRAP53 locus deletions, the direction of transcription and the variety of neighboring genes). This combined visualization interprets the variant concordance of the TP53 molecule between Danio rerio and others mentioned species.
+
+\newpage
+
+
+## Fig. 4A: Standalone sequence logo module 
+
+```{r  fig.height = 1.2, fig.width = 7}
+negative <-  system.file("extdata", "Gram-negative_AKL.fasta", package = "ggmsa")
+seqlogo(negative, color = "Chemistry_AA", font = "DroidSansMono")
+```
+**Fig. 4A**| An example of protein sequence logos showing the Gram-negative AKL domain.
+
+## Fig. 3B: Rendering MSAs as Sequence Bundles
+
+```{r fig.height = 3, fig.width = 8}
+ggSeqBundle(negative)
+```
+**Fig. 4B**| ggmsa used seqBundles function to visualize the MSA of AKL family as the new visualization technique: Sequence Bundles. It can show amino acid distribution and correlation. Symbols of the Y-axis are arranged on a scale representing amino acid hydrophobicity. The lines’ curved paths expose the conservation of residues by converging at matched positions and symbols place in the Y-axis reveals patterns in functionality.
+
+
+##  Fig. 4C: RNA secondary structure annotation for a MSA
+
+```{r fig.height = 3, fig.width = 8, message=F, warning=F}
+RF03120_msa <- rfaRm::rfamSeedAlignment("RF03120", format = "fasta")
+RF03120_ss <- rfaRm::rfamConsensusSecondaryStructure("RF03120")
+RF03120_ss <- RF03120_ss[[2]]
+
+SS_header <- paste0(">","RF03120_SS")
+SS <- paste(SS_header, RF03120_ss, sep =  "\n")
+f <- tempfile(fileext=".txt")
+write.table(SS, file = f)
+known <- readSSfile(f, type = "Vienna" )
+
+ggmsa(RF03120_msa, 
+      font = NULL, 
+      color = "Chemistry_NT", 
+      seq_name = F, 
+      show.legend = T, 
+      border = NA) +
+  geom_helix(helix_data = known)
+```
+**Fig. 4C**|An example of visualizing MSAs in conjunction with RNA secondary structure. The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. The extra RNA secondary structure data integrated with MSA plot as arc diagrams and helices were colored according to the base-pair group. The 5′ UTR within the Sarbecovirus is responsible for important biological functions, such as viral replication, transcription and packaging. And it has a conserved RNA secondary structure on common Coronavirus genera. The graphical combination of the alignment and secondary structures reveals the co-variation of Sarbecovirus 5'UTR that retains the base-pairing ability, but changes the base-pairing nucleotides, and is strong evidence for RNA structure conservation.
+
+&nbsp;
+&nbsp;
+
+## Session Info
+
+ Here is the output of sessionInfo() on the system on which this document was compiled:
+```{r echo = FALSE}
+sessionInfo()
+```
+
+&nbsp;
+
+## References
