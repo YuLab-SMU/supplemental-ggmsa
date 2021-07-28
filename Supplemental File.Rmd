@@ -126,8 +126,8 @@ p2_sch <- ggplot(data = my_schemeNT, aes_(x =~ scheme, y =~ char, fill =~ I(colo
 
 ## Fig. \ref{fig:birds_eye}: Bird's-eyes view in ggmsa
 
-```{r birds_eye, fig.height = 1.5,fig.width = 11, message=F, fig.cap="\\label{fig:birds_eye}A compact overview MSA showing a bird’s eye view of the full alignment of  the Cripavirus Internal Ribosomal Entry Site [family RF00458 from the Rfam database][@nawrocki2015rfam]."}
-RF00458_msa <- rfaRm::rfamSeedAlignment("RF00458", format = "fasta")
+```{r birds_eye, fig.height = 1.5,fig.width = 11,  message=F, fig.cap="\\label{fig:birds_eye}A compact overview MSA showing a bird’s eye view of the full alignment of  the Cripavirus Internal Ribosomal Entry Site [family RF00458 from the Rfam database][@nawrocki2015rfam]."}
+RF00458_msa<- system.file("extdata", "Rfam", "RF00458.fasta", package = "ggmsa")
 ggmsa(RF00458_msa, font = NULL, border = NA, seq_name = F, color = "Chemistry_NT") + 
   coord_cartesian()
 ```
@@ -328,15 +328,10 @@ ggSeqBundle(negative)
 ##  Fig. 4C: RNA secondary structure annotation for a MSA (R code) 
 
 ```{r fig.height = 3, fig.width = 8, message=F, warning=F}
-RF03120_msa <- rfaRm::rfamSeedAlignment("RF03120", format = "fasta")
-RF03120_ss <- rfaRm::rfamConsensusSecondaryStructure("RF03120")
-RF03120_ss <- RF03120_ss[[2]]
+RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
+RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
 
-SS_header <- paste0(">","RF03120_SS")
-SS <- paste(SS_header, RF03120_ss, sep =  "\n")
-f <- tempfile(fileext=".txt")
-write.table(SS, file = f)
-known <- readSSfile(f, type = "Vienna" )
+known <- readSSfile(RF03120_ss, type = "Vienna" )
 
 ggmsa(RF03120_msa, 
       font = NULL, 
@@ -344,9 +339,30 @@ ggmsa(RF03120_msa,
       seq_name = F, 
       show.legend = T, 
       border = NA) +
-  geom_helix(helix_data = known)
+  geom_helix(helix_data = known) + 
+  theme(axis.text.y = element_blank())
 ```
 **Fig. 4C**|An example of visualizing MSAs in conjunction with RNA secondary structure. The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. The extra RNA secondary structure data integrated with MSA plot as arc diagrams and helices were colored according to the base-pair group. The 5′ UTR within the Sarbecovirus is responsible for important biological functions, such as viral replication, transcription and packaging. And it has a conserved RNA secondary structure on common Coronavirus genera. The graphical combination of the alignment and secondary structures reveals the co-variation of Sarbecovirus 5'UTR that retains the base-pairing ability, but changes the base-pairing nucleotides, and is strong evidence for RNA structure conservation.
+
+##  Fig. 5: Examples of detecting sequence recombination signals (R code) 
+
+```{r fig.height = 10, fig.width = 10, message=F, warning=F}
+library(aplot)
+library(ggplotify)
+library(patchwork)
+
+fas <- list.files(system.file("extdata", "GVariation", package="ggmsa"), 
+                  pattern="fas", full.names=TRUE)
+fas <- fas[-3]
+
+xx <- lapply(fas, seqdiff)
+plts <- lapply(xx, plot)
+plts[[3]] <- simplot(fas, 'CF_YL21')
+
+plot_list(lapply(plts, function(i)as.ggplot(i)), ncol = 1) + 
+  plot_annotation(tag_levels = "A")
+```
+**Fig. 5**| Examples of detecting sequence recombination signals. CF_YL21 is a Potato virus Y (PVY) isolate from Solanum tuberosum in China. PVYN (Mont, AY884983) and PVYO (Oz, EF026074) were chosen as potential parents. (A) The comparison of CF_YL21 sequence with Mont. The x-axis corresponds to nucleotide position along the CF_YL21 genome, and the y-axis is the number of nucleotide differences between the genomes. Bar charts indicate number of base differences in every 50 sites (B) The comparison of CF_YL21 sequence with Oz (C) Detection and verification of recombination breakpoints in PVY CF_YL21 using PVYN and PVYO as reference strains. Two recombination signals (The intersection of line, site of 309 and 2224) were detected in the CF_YL21 genome.
 
 &nbsp;
 &nbsp;
@@ -357,6 +373,7 @@ ggmsa(RF03120_msa,
 ```{r echo = FALSE}
 sessionInfo()
 ```
+
 
 &nbsp;
 
