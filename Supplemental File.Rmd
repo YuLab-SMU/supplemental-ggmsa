@@ -359,8 +359,7 @@ xx <- lapply(fas, seqdiff)
 plts <- lapply(xx, plot)
 plts[[3]] <- simplot(fas, 'CF_YL21')
 
-plot_list(lapply(plts, function(i)as.ggplot(i)), ncol = 1) + 
-  plot_annotation(tag_levels = "A")
+plot_list(gglist=plts, ncol=1, tag_levels = 'A')
 ```
 **Fig. 5**| Examples of detecting sequence recombination signals. CF_YL21 is a Potato virus Y (PVY) isolate from Solanum tuberosum in China. PVYN (Mont, AY884983) and PVYO (Oz, EF026074) were chosen as potential parents. (A) The comparison of CF_YL21 sequence with Mont. The x-axis corresponds to nucleotide position along the CF_YL21 genome, and the y-axis is the number of nucleotide differences between the genomes. Bar charts indicate number of base differences in every 50 sites (B) The comparison of CF_YL21 sequence with Oz (C) Detection and verification of recombination breakpoints in PVY CF_YL21 using PVYN and PVYO as reference strains. Two recombination signals (The intersection of line, site of 309 and 2224) were detected in the CF_YL21 genome.
 
