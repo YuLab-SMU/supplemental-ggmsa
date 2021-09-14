@@ -217,6 +217,9 @@ ggsave("Fig6.png", plot = p6, width = 10, height = 14)
 RNA7S  <- "data/3JAJ-2D-dotbracket.txt"
 RNAP54 <- "data/4UJE-2D-dotbracket.txt"
 
+RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
+RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
+
 known <- readSSfile(RNA7S, type = "Vienna" )
 transat <- readSSfile(RNAP54 , type = "Vienna")
 # p5A <- gghelix(list(known = known, predicted = transat), overlap = F)
@@ -224,15 +227,28 @@ transat <- readSSfile(RNAP54 , type = "Vienna")
 # aplot::plot_list(list(p4A, p4A), nrow = 1) +
 #   plot_annotation(tag_levels = "A")
 
-p7A <- ggmsa("data/5SRNA.fa",
-      font = NULL,
-      color = "Chemistry_NT",
-      seq_name = T,
-      show.legend = F,
-      border = NA) +
-  geom_helix(helix_data = list(known = known, 
-                               predicted = transat),
-             overlap = T)
+# p7A <- ggmsa("data/5SRNA.fa",
+#       font = NULL,
+#       color = "Chemistry_NT",
+#       seq_name = T,
+#       show.legend = F,
+#       border = NA) +
+#   geom_helix(helix_data = list(known = known, 
+#                                predicted = transat),
+#              overlap = T)
+
+
+
+RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
+
+p7A <- ggmsa(RF03120_msa, 
+             font = NULL, 
+             color = "Chemistry_NT", 
+             seq_name = F, 
+             show.legend = F, 
+             border = NA) +
+        geom_helix(helix_data = RF_arc) + 
+        theme(axis.text.y = element_blank())
 
 p7B <- ggmsa("data/5SRNA.fa",
              font = NULL,
@@ -244,7 +260,7 @@ p7B <- ggmsa("data/5SRNA.fa",
                                predicted = transat),
              overlap = F)
 
-p7 <- aplot::plot_list(list(p7A, p7B), nrow = 1) +
+p7 <- aplot::plot_list(list(p7A, p7B), ncol = 1,heights = c(0.15)) +
   plot_annotation(tag_levels = "A")
 
 ggsave("Fig7.pdf", plot = p7, width = 10, height = 6)
