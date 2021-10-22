@@ -11,6 +11,7 @@ library(dplyr)
 library(RColorBrewer)
 library(patchwork)
 library(ggplotify)
+library(aplot)
 
 protein_sequences <- system.file("extdata", "sample.fasta", package = "ggmsa")
 nt_sequence <- system.file("extdata", "LeaderRepeat_All.fa", package = "ggmsa")
@@ -28,9 +29,36 @@ ggsave("Fig3.pdf", plot = p3, width = 14, height = 3)
 ggsave("Fig3.png", plot = p3, width = 14, height = 3)
 
 
-##Fig 4 graphics combination##
+##Fig 4 sequence logo + sequence bundle##
+negative <-  system.file("extdata", "Gram-negative_AKL.fasta", package = "ggmsa")
+p4A <- seqlogo(negative, color = "Chemistry_AA", font = "DroidSansMono") + coord_cartesian()
+p4B <- ggSeqBundle(negative)
 
-##Fig 4A tree + msa + genes locus
+
+p4 <- plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
+
+ggsave("Fig4.png", plot = p4, width = 12, height = 6)
+ggsave("Fig4.pdf", plot = p4, width = 12, height = 6)
+
+
+
+##Fig 5 sequence recombination##
+fas <- c("data/HM_KP.fa","data/CK_KP.fa")
+xx <- lapply(fas, seqdiff)
+plts <- lapply(xx, plot, width = 100)
+plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649') + theme(legend.position = "bottom")
+
+p5 <- plot_list(gglist=plts, ncol=1, tag_levels = 'A')
+
+# p5 <- aplot::plot_list(lapply(plts, function(i)as.ggplot(i)), ncol = 1) +
+#   plot_annotation(tag_levels = "A")
+
+ggsave("Fig5.pdf", plot = p5, width = 10, height = 14)
+ggsave("Fig5.png", plot = p5, width = 10, height = 14)
+
+##Fig 6 graphics combination##
+
+##Fig 6A tree + msa + genes locus
 dat <- read.aa(tp53_sequences, format = "fasta") %>% phyDat(type = "AA", levels = NULL)
 tree <- dist.ml(dat, model = "JTT") %>% bionj()
 dd <- ggimage::phylopic_uid(tree$tip.label)
@@ -51,7 +79,7 @@ mapping = aes(xmin = start, xmax = end, fill = gene, forward = direction)
 my_pal <- colorRampPalette(rev(brewer.pal(n = 10, name = "Set3")))
 
 #tree + gene maps + msa
-p4a <- p_tp53  + xlim_tree(4) +
+p6a <- p_tp53  + xlim_tree(4) +
   geom_facet(geom = geom_msa, data = data_53,
              panel = 'Multiple Sequence Alignment of the TP53 Protein', font = NULL,
              border = NA) +
@@ -66,7 +94,7 @@ p4a <- p_tp53  + xlim_tree(4) +
         strip.text = element_text(size = 13))
 
 
-p4A <- facet_widths(p4a, c(Tree = 0.35, Genome_Locus = 0.3))
+p6A <- facet_widths(p6a, c(Tree = 0.35, Genome_Locus = 0.3))
 
 # ggsave("Fig6A.pdf", width = 13, height = 4)
 # ggsave("Fig6A.png", width = 13, height = 4)
@@ -129,7 +157,7 @@ p_btuR_tree <- p_btuR_tree +
              label="E",offset =.01,  offset.text = 0.0015)
 
 ##tree + meta data boxplots
-p4B <- p_btuR_tree  +
+p6B <- p_btuR_tree  +
   geom_treescale(x = 0,y = -1) +
   geom_fruit(data = aln,
              geom = geom_msa,
@@ -137,6 +165,8 @@ p4B <- p_btuR_tree  +
              font = NULL,
              color = "Chemistry_NT",
              border = NA,
+             # consensus_views = T, 
+             # ref = "L38",
              pwidth = 3.5,
              offset = 0.3,
              axis.params = list(title = "Multiple Sequence Alignment of the btuR Gene",
@@ -180,36 +210,15 @@ p4B <- p_btuR_tree  +
   scale_fill_manual(values = Pathotype_cols)
 
 
-p4 <- aplot::plot_list(list(p4A, p4B), ncol = 1, heights = c(0.3,0.7)) +
-  plot_annotation(tag_levels = "A")
+p6 <- plot_list(gglist = list(p6A, p6B), ncol = 1, heights = c(0.3,0.7), tag_levels = 'A') 
 
-ggsave("Fig4.png",p4, width = 18, height = 13)
-ggsave("Fig4.pdf",p4, width = 18, height = 13)
-
-
-##Fig 5 sequence logo + sequence bundle##
-negative <-  system.file("extdata", "Gram-negative_AKL.fasta", package = "ggmsa")
-p5A <- seqlogo(negative, color = "Chemistry_AA", font = "DroidSansMono") + coord_cartesian()
-p5B <- ggSeqBundle(negative)
+ggsave("Fig6.png",p6, width = 18, height = 13)
+ggsave("Fig6.pdf",p6, width = 18, height = 13)
 
 
-aplot::plot_list(list(p5A, p5B), ncol = 1, heights = c(0.3,1))#+
-  #plot_annotation(tag_levels = "A")
 
-ggsave("Fig5.png",  width = 12, height = 6)
-ggsave("Fig5.pdf",  width = 12, height = 6)
 
-##Fig 6 sequence recombianation##
-fas <- c("data/HM_KP.fa","data/CK_KP.fa")
-xx <- lapply(fas, seqdiff)
-plts <- lapply(xx, plot, width = 100)
-plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649') + theme(legend.position = "bottom")
 
-p6 <- aplot::plot_list(lapply(plts, function(i)as.ggplot(i)), ncol = 1) +
-  plot_annotation(tag_levels = "A")
-
-ggsave("Fig6.pdf", plot = p6, width = 10, height = 14)
-ggsave("Fig6.png", plot = p6, width = 10, height = 14)
 
 
 
@@ -260,7 +269,7 @@ p7B <- ggmsa("data/5SRNA.fa",
                                predicted = transat),
              overlap = F)
 
-p7 <- aplot::plot_list(list(p7A, p7B), ncol = 1,heights = c(0.15)) +
+p7 <- plot_list(gglist = list(p7A, p7B), ncol = 1,heights = c(0.15), tag_levels = 'A') +
   plot_annotation(tag_levels = "A")
 
 ggsave("Fig7.pdf", plot = p7, width = 10, height = 6)
