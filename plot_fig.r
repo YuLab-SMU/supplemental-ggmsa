@@ -30,12 +30,35 @@ ggsave("Fig3.png", plot = p3, width = 14, height = 3)
 
 
 ##Fig 4 sequence logo + sequence bundle##
-negative <-  system.file("extdata", "Gram-negative_AKL.fasta", package = "ggmsa")
-p4A <- seqlogo(negative, color = "Chemistry_AA", font = "DroidSansMono") + coord_cartesian()
-p4B <- ggSeqBundle(negative)
 
+# p4A <- seqlogo(negative, color = "Chemistry_AA", font = "DroidSansMono") + coord_cartesian()
+# p4B <- ggSeqBundle(negative)
+# p4 <- plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
 
-p4 <- plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
+negative <-  system.file("extdata", "Gram-negative_AKL.fasta", 
+                         package = "ggmsa")
+positive <-  system.file("extdata", "Gram-positive_AKL.fasta", 
+                         package = "ggmsa")
+
+pos <- data.frame(x= c(4, 7, 9, 24, 27, 29,
+                       4, 7, 24, 27), 
+                  y = c(c(21, 11, 20, 17, 12, 18) +.3,
+                        c(13, 13, 13, 13) +.5
+                        ), 
+                  label = c("H", "S", "R", "D", "T", "E",
+                            "C", "C", "C", "C"),
+                  color = c(rep("#ff4700",6), 
+                            rep("#0443d0",4)))
+
+p4B <- ggSeqBundle(list(negative, positive), 
+                   alpha = 0.1, 
+                   bundle_color = c("#FC8D62","#8DA0CB"))+ #RColorBrewer: Set2:2-3
+  geom_text(data = pos, 
+            mapping = aes(x, y, 
+                          label = label, 
+                          color = I(color)),
+            inherit.aes = FALSE, 
+            size = 4)
 
 ggsave("Fig4.png", plot = p4, width = 12, height = 6)
 ggsave("Fig4.pdf", plot = p4, width = 12, height = 6)
