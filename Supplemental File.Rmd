@@ -336,14 +336,41 @@ compare_tab
 
 ## Fig. 4: The combination of sequence logos and sequence bundles (R code)
 
-```{r echo=FALSE, fig.height=3, fig.width=8, message=FALSE}
-negative <-  system.file("extdata", "Gram-negative_AKL.fasta", package = "ggmsa")
-p4A <- seqlogo(negative, color = "Chemistry_AA", font = "DroidSansMono") + coord_cartesian()
-p4B <- ggSeqBundle(negative)
+```{r, fig.height=3, fig.width=8, message=FALSE}
+p4A <- seqlogo("data/Gram-NP-merge.fa", 
+               color = "Chemistry_AA", 
+               font = "DroidSansMono") + 
+   coord_cartesian()
+
+
+negative <-  system.file("extdata", "Gram-negative_AKL.fasta", 
+                         package = "ggmsa")
+positive <-  system.file("extdata", "Gram-positive_AKL.fasta", 
+                         package = "ggmsa")
+
+pos <- data.frame(x= c(4, 7, 9, 24, 27, 29,
+                       4, 7, 24, 27), 
+                  y = c(c(21, 11, 20, 17, 12, 18) +.3,
+                        c(13, 13, 13, 13) +.5
+                        ), 
+                  label = c("H", "S", "R", "D", "T", "E",
+                            "C", "C", "C", "C"),
+                  color = c(rep("#ff4700",6), 
+                            rep("#0443d0",4)))
+
+p4B <- ggSeqBundle(list(negative, positive), 
+                   alpha = 0.1, 
+                   bundle_color = c("#FC8D62","#8DA0CB"))+ #RColorBrewer: Set2:2-3
+  geom_text(data = pos, 
+            mapping = aes(x, y, 
+                          label = label, 
+                          color = I(color)),
+            inherit.aes = FALSE, 
+            size = 4)
 
 plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
 ```
-**Fig. 4**| The example data, which were used to generate sequence logos (the top panel) and sequence bundle (the bottom panel), include 100 aligned sequences of the Gram-negative adenylate kinase lid (AKL) domain. In the sequence bundle panel, symbols of the y-axis are arranged on a scale representing amino acid hydrophobicity. The lines’ curved paths expose the conservation of residues by converging at matched positions and symbols place in the y-axis reveals patterns in functionality. 
+**Fig. 4**| The combination of sequence logos and sequence bundles. The data contain adenylate kinase lid (AKL) domain both of Gram-negative and Gram-negative bacteria. 100 sequences for each groups. The sequence logo (top panel) represents the AKL sequence pattern and the sequence bundle (bottom panel) represents the different residues relationship between Gram-negative (orange) and Gram-negative (purple) bacteria. The site at 4, 7, 9, 24, 27 and 29 has exclusive pattern (His4, Ser7, Arg9, Asp24, Thr27, Glu29) in the Gram-negative sequences. And the site at 4, 7, 24 and 27 both contain the Cysteines in the Gram-positive sequences. These residues relationship in agreement with the structural stability with the AKL domain. Gram-negatives form hydrogen bonding network by the exclusive pattern and Gram-positives bound metal ion to form coordinated tetrahedral by Cys. (Date from BioVis2013 and repeated example from Science Practice)
 
 \newpage
 
@@ -355,7 +382,7 @@ xx <- lapply(fas, seqdiff)
 plts <- lapply(xx, plot, width = 100)
 plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649') + theme(legend.position = "bottom")
 
-plot_list(gglist=plts, ncol=1, tag_levels = 'A')
+plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
 ```
 **Fig. 5**| The nucleotide different plots were generated using the comparison of KP827649 sequence (Tomato Spotted Wilt Virus large RNA genomic segment) with that of (A) HM581979 sequence (Major parent) and (B) KC261971 sequence (Minor parent). (C) The similarity curves investigates the sequence similarity between KP827649 sequence and potential parents. Two recombination signals (The intersection of two curves in similarity plot, start breakpoint is 4534 and the end breakpoint is 5536) were detected in the TSWV LRNA genomic segment. 
 
@@ -472,8 +499,8 @@ p6B <- p_btuR_tree  +
              font = NULL,
              color = "Chemistry_NT",
              border = NA,
-             # consensus_views = T, 
-             # ref = "L38",
+             consensus_views = T, 
+             ref = "L38",
              pwidth = 3.5,
              offset = 0.3,
              axis.params = list(title = "Multiple Sequence Alignment of the btuR Gene",

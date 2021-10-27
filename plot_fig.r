@@ -31,9 +31,11 @@ ggsave("Fig3.png", plot = p3, width = 14, height = 3)
 
 ##Fig 4 sequence logo + sequence bundle##
 
-# p4A <- seqlogo(negative, color = "Chemistry_AA", font = "DroidSansMono") + coord_cartesian()
-# p4B <- ggSeqBundle(negative)
-# p4 <- plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
+p4A <- seqlogo("data/Gram-NP-merge.fa", 
+               color = "Chemistry_AA", 
+               font = "DroidSansMono") + 
+   coord_cartesian()
+
 
 negative <-  system.file("extdata", "Gram-negative_AKL.fasta", 
                          package = "ggmsa")
@@ -60,6 +62,7 @@ p4B <- ggSeqBundle(list(negative, positive),
             inherit.aes = FALSE, 
             size = 4)
 
+p4 <- plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
 ggsave("Fig4.png", plot = p4, width = 12, height = 6)
 ggsave("Fig4.pdf", plot = p4, width = 12, height = 6)
 
@@ -71,7 +74,7 @@ xx <- lapply(fas, seqdiff)
 plts <- lapply(xx, plot, width = 100)
 plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649') + theme(legend.position = "bottom")
 
-p5 <- plot_list(gglist=plts, ncol=1, tag_levels = 'A')
+p5 <- plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
 
 # p5 <- aplot::plot_list(lapply(plts, function(i)as.ggplot(i)), ncol = 1) +
 #   plot_annotation(tag_levels = "A")
