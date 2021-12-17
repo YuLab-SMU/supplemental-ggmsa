@@ -19,22 +19,11 @@ miRNA_sequences <- system.file("extdata", "seedSample.fa", package = "ggmsa")
 tp53_sequences <-  system.file("extdata", "tp53.fa", package = "ggmsa")
 tp53_genes <- system.file("extdata", "TP53_genes.xlsx", package = "ggmsa")
 
-##Fig 3 MSA+ logo + bar##
-p3 <- ggmsa(protein_sequences, 221, 280, seq_name = TRUE, char_width = 0.5,border = "white") +
-  geom_seqlogo(color = "Chemistry_AA") +
-  geom_msaBar()
-
-pdf.options(useDingbats=FALSE)
-ggsave("Fig3.pdf", plot = p3, width = 14, height = 3)
-ggsave("Fig3.png", plot = p3, width = 14, height = 3)
-
-
-##Fig 4 sequence logo + sequence bundle##
-
-p4A <- seqlogo("data/Gram-NP-merge.fa", 
+##Fig.2A sequence logo + sequence bundles##
+p2A <- seqlogo("data/Gram-NP-merge.fa", 
                color = "Chemistry_AA", 
                font = "DroidSansMono") + 
-   coord_cartesian()
+  coord_cartesian()
 
 
 negative <-  system.file("extdata", "Gram-negative_AKL.fasta", 
@@ -46,15 +35,15 @@ pos <- data.frame(x= c(4, 7, 9, 24, 27, 29,
                        4, 7, 24, 27), 
                   y = c(c(21, 11, 20, 17, 12, 18) +.3,
                         c(13, 13, 13, 13) +.5
-                        ), 
+                  ), 
                   label = c("H", "S", "R", "D", "T", "E",
                             "C", "C", "C", "C"),
                   color = c(rep("#ff4700",6), 
                             rep("#0443d0",4)))
 
-p4B <- ggSeqBundle(list(negative, positive), 
-                   alpha = 0.1, 
-                   bundle_color = c("#FC8D62","#8DA0CB"))+ #RColorBrewer: Set2:2-3
+p2A2 <- ggSeqBundle(list(negative, positive), 
+                    alpha = 0.1, 
+                    bundle_color = c("#FC8D62","#8DA0CB"))+ #RColorBrewer: Set2:2-3
   geom_text(data = pos, 
             mapping = aes(x, y, 
                           label = label, 
@@ -62,29 +51,77 @@ p4B <- ggSeqBundle(list(negative, positive),
             inherit.aes = FALSE, 
             size = 4)
 
-p4 <- plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
-ggsave("Fig4.png", plot = p4, width = 12, height = 6)
-ggsave("Fig4.pdf", plot = p4, width = 12, height = 6)
+# plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
+
+##Fig.2B stacked MSA + logo&bar annotations##
+p2B <- ggmsa(protein_sequences, 221, 280, seq_name = TRUE, char_width = 0.5,border = "white") +
+  geom_seqlogo(color = "Chemistry_AA") +
+  geom_msaBar()
 
 
+# pp <- plot_list(gglist = list(p4A, p4B,p3), ncol = 1, heights = c(0.3,1,0.5))
+# ggsave("pp.pdf", plot = pp, width = 12, height = 9)
 
-##Fig 5 sequence recombination##
+
+##Fig.2C,2D Stacked MSA + RNA SS##
+RNA7S  <- "data/3JAJ-2D-dotbracket.txt"
+RNAP54 <- "data/4UJE-2D-dotbracket.txt"
+
+RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
+RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
+
+known <- readSSfile(RNA7S, type = "Vienna" )
+transat <- readSSfile(RNAP54 , type = "Vienna")
+
+RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
+
+p2C <- ggmsa(RF03120_msa, 
+             font = NULL, 
+             color = "Chemistry_NT", 
+             seq_name = F, 
+             show.legend = F, 
+             border = NA) +
+  geom_helix(helix_data = RF_arc) + 
+  theme(axis.text.y = element_blank())
+
+p2D <- ggmsa("data/5SRNA.fa",
+             font = NULL,
+             color = "Chemistry_NT",
+             seq_name = T,
+             show.legend = F,
+             border = NA) +
+  geom_helix(helix_data = list(known = known, 
+                               predicted = transat),
+             overlap = F)
+
+p2CD <- plot_list(gglist = list(p2C, p2D), nrow= 1,tag_levels = list(c(' ',"D"))) 
+
+##plot all##
+pp <- plot_list(gglist = list(p2A, p2A2,p2B, p2CD), ncol = 1, 
+                heights = c(0.3, 1, 0.6, 0.6),
+                tag_levels = list(c("A",' ',"B", "C", "D")))
+
+ggsave("Fig2.pdf", plot = pp, width = 12, height = 11)
+ggsave("Fig2.png", plot = pp, width = 12, height = 11)
+
+
+##Fig 3 sequence recombination##
 fas <- c("data/HM_KP.fa","data/CK_KP.fa")
 xx <- lapply(fas, seqdiff)
 plts <- lapply(xx, plot, width = 100)
 plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649') + theme(legend.position = "bottom")
 
-p5 <- plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
+p3 <- plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
 
-# p5 <- aplot::plot_list(lapply(plts, function(i)as.ggplot(i)), ncol = 1) +
-#   plot_annotation(tag_levels = "A")
 
-ggsave("Fig5.pdf", plot = p5, width = 10, height = 14)
-ggsave("Fig5.png", plot = p5, width = 10, height = 14)
+ggsave("Fig3.pdf", plot = p3, width = 10, height = 14)
+ggsave("Fig3.png", plot = p3, width = 10, height = 14)
 
-##Fig 6 graphics combination##
 
-##Fig 6A tree + msa + genes locus
+
+##Fig 4 graphics combination##
+
+##Fig 4 tree + msa + genes locus
 dat <- read.aa(tp53_sequences, format = "fasta") %>% phyDat(type = "AA", levels = NULL)
 tree <- dist.ml(dat, model = "JTT") %>% bionj()
 dd <- ggimage::phylopic_uid(tree$tip.label)
@@ -105,7 +142,7 @@ mapping = aes(xmin = start, xmax = end, fill = gene, forward = direction)
 my_pal <- colorRampPalette(rev(brewer.pal(n = 10, name = "Set3")))
 
 #tree + gene maps + msa
-p6a <- p_tp53  + xlim_tree(4) +
+p4a <- p_tp53  + xlim_tree(4) +
   geom_facet(geom = geom_msa, data = data_53,
              panel = 'Multiple Sequence Alignment of the TP53 Protein', font = NULL,
              border = NA) +
@@ -120,12 +157,12 @@ p6a <- p_tp53  + xlim_tree(4) +
         strip.text = element_text(size = 13))
 
 
-p6A <- facet_widths(p6a, c(Tree = 0.35, Genome_Locus = 0.3))
+p4A <- facet_widths(p4a, c(Tree = 0.35, Genome_Locus = 0.3))
 
-# ggsave("Fig6A.pdf", width = 13, height = 4)
-# ggsave("Fig6A.png", width = 13, height = 4)
+# ggsave("Fig4A.pdf", width = 13, height = 4)
+# ggsave("Fig4A.png", width = 13, height = 4)
 
-##Fig 6B tree + msa + 2boxplot
+##Fig 4B tree + msa + 2boxplot
 seq <-readDNAStringSet("data//btuR.fa")
 aln <- tidy_msa(seq)
 btuR_tree <- read.tree("data/btuR.nwk")
@@ -183,7 +220,7 @@ p_btuR_tree <- p_btuR_tree +
              label="E",offset =.01,  offset.text = 0.0015)
 
 ##tree + meta data boxplots
-p6B <- p_btuR_tree  +
+p4B <- p_btuR_tree  +
   geom_treescale(x = 0,y = -1) +
   geom_fruit(data = aln,
              geom = geom_msa,
@@ -191,8 +228,8 @@ p6B <- p_btuR_tree  +
              font = NULL,
              color = "Chemistry_NT",
              border = NA,
-             # consensus_views = T, 
-             # ref = "L38",
+             consensus_views = T, 
+             ref = "L38",
              pwidth = 3.5,
              offset = 0.3,
              axis.params = list(title = "Multiple Sequence Alignment of the btuR Gene",
@@ -236,70 +273,12 @@ p6B <- p_btuR_tree  +
   scale_fill_manual(values = Pathotype_cols)
 
 
-p6 <- plot_list(gglist = list(p6A, p6B), ncol = 1, heights = c(0.3,0.7), tag_levels = 'A') 
+p4 <- plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,0.7), tag_levels = 'A') 
 
-ggsave("Fig6.png",p6, width = 18, height = 13)
-ggsave("Fig6.pdf",p6, width = 18, height = 13)
-
-
+ggsave("Fig4.png",p4, width = 18, height = 13)
+ggsave("Fig4.pdf",p4, width = 18, height = 13)
 
 
-
-
-
-
-##Fig 7 RNA SS#
-RNA7S  <- "data/3JAJ-2D-dotbracket.txt"
-RNAP54 <- "data/4UJE-2D-dotbracket.txt"
-
-RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
-RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
-
-known <- readSSfile(RNA7S, type = "Vienna" )
-transat <- readSSfile(RNAP54 , type = "Vienna")
-# p5A <- gghelix(list(known = known, predicted = transat), overlap = F)
-# p5B <- gghelix(list(known = known, predicted = transat), overlap = T)
-# aplot::plot_list(list(p4A, p4A), nrow = 1) +
-#   plot_annotation(tag_levels = "A")
-
-# p7A <- ggmsa("data/5SRNA.fa",
-#       font = NULL,
-#       color = "Chemistry_NT",
-#       seq_name = T,
-#       show.legend = F,
-#       border = NA) +
-#   geom_helix(helix_data = list(known = known, 
-#                                predicted = transat),
-#              overlap = T)
-
-
-
-RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
-
-p7A <- ggmsa(RF03120_msa, 
-             font = NULL, 
-             color = "Chemistry_NT", 
-             seq_name = F, 
-             show.legend = F, 
-             border = NA) +
-        geom_helix(helix_data = RF_arc) + 
-        theme(axis.text.y = element_blank())
-
-p7B <- ggmsa("data/5SRNA.fa",
-             font = NULL,
-             color = "Chemistry_NT",
-             seq_name = T,
-             show.legend = T,
-             border = NA) +
-  geom_helix(helix_data = list(known = known, 
-                               predicted = transat),
-             overlap = F)
-
-p7 <- plot_list(gglist = list(p7A, p7B), ncol = 1,heights = c(0.15), tag_levels = 'A') +
-  plot_annotation(tag_levels = "A")
-
-ggsave("Fig7.pdf", plot = p7, width = 10, height = 6)
-ggsave("Fig7.png", plot = p7, width = 10, height = 6)
 
 
 
