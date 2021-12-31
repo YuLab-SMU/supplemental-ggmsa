@@ -263,6 +263,26 @@ ggmsa supports to link ggtree [@yu2017ggtree] by `geom_facet()`. Sequence order 
      xlim_tree(1)
 ```
 
+## Fig. \ref{fig:re-order_bundles}: Re-designated residues order in Sequence bundle
+
+```{r re-order_bundles, fig.height = 4, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:re-order_bundles}The preference of residues’ physicochemical property can be reflected by adjusting the order of letters on the y-axis. It shows re-dsignaed residues order according to amino acid molecule weight. The large molecule is at the bottom"}
+negative <-  system.file("extdata", "Gram-negative_AKL.fasta", 
+                         package = "ggmsa")
+positive <-  system.file("extdata", "Gram-positive_AKL.fasta", 
+                         package = "ggmsa")
+
+ggSeqBundle(list(negative, positive), 
+                 alpha = 0.1, 
+                 bundle_color = c("#FC8D62","#8DA0CB"),
+                 lev_molecule = c("-", "W", "Y", "R", "F", "H", "M", "E", 
+                                  "K", "Q", "D", "N", "L", "I", "C", "T", 
+                                  "V", "P", "S", "A", "G"))
+```
+
+
+\newpage
+
+## Table S1: Comparison of ggmsa with popular free MSA visualization tools
 
 ```{r compare, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=7.5, fig.height=3.2, error=FALSE, fig.cap="\\label{fig:compare}Visualization methods for MSA supported by different software tools, results='asis'."}
 require(kableExtra)
@@ -323,7 +343,6 @@ compare_tab <-
 compare_tab
 ```
 <!-- \newpage -->
-
 
 
 ## Fig. 2A: The combination of sequence logos and sequence bundles (R code)
@@ -425,7 +444,8 @@ p2CD
 fas <- c("data/HM_KP.fa","data/CK_KP.fa")
 xx <- lapply(fas, seqdiff)
 plts <- lapply(xx, plot, width = 100)
-plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649') + theme(legend.position = "bottom")
+plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649', smooth = FALSE) + 
+  theme(legend.position = "bottom")
 
 plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
 ```

@@ -109,7 +109,7 @@ ggsave("Fig2.png", plot = pp, width = 12, height = 11)
 fas <- c("data/HM_KP.fa","data/CK_KP.fa")
 xx <- lapply(fas, seqdiff)
 plts <- lapply(xx, plot, width = 100)
-plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649') + theme(legend.position = "bottom")
+plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649',smooth = F) + theme(legend.position = "bottom")
 
 p3 <- plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
 
