@@ -225,7 +225,7 @@ ggmsa(protein_sequences, 300, 350, char_width = 0.5,
 
 ## Fig. \ref{fig:treeExtra}: MSA view with circular layout tree
 
-A specific layout of the alignment can also be displayed by linking ggtreeExtra [@yu2021ggtreeextra]. `geom_fruit` will automatically align MSA graphs to the tree with circular layout 
+A specific layout of the alignment can also be displayed by linking ggtreeExtra [@xu2021ggtreeextra]. `geom_fruit` will automatically align MSA graphs to the tree with circular layout 
 ```{r treeExtra, fig.height=3, fig.width =3, message = FALSE, warning= FALSE, fig.cap="\\label{fig:treeExtra}Example of MSA view with circular layout phylogenetic tree."}
 library(ggtree)
 library(ggtreeExtra)
@@ -283,6 +283,8 @@ ggSeqBundle(list(negative, positive),
 \newpage
 
 ## Table S1: Comparison of ggmsa with popular free MSA visualization tools
+
+We compared MSA visualization methods among ggmsa and other tools (**msa** [@bodenhofer2015msa], **MSAviewer** [@yachdav2016msaviewer], **AliView** [@larsson2014aliview], **Jalview** [@waterhouse2009jalview], **ALVIS** [@schwarz2016alvis])
 
 ```{r compare, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=7.5, fig.height=3.2, error=FALSE, fig.cap="\\label{fig:compare}Visualization methods for MSA supported by different software tools, results='asis'."}
 require(kableExtra)
