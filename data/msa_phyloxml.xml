@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phyloxml xsi:schemaLocation="http://www.phyloxml.org http://www.phyloxml.org/1.10/phyloxml.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.phyloxml.org">
+  <phylogeny rooted="true" type="genomic align tree">
+    <clade branch_length="0">
+      <name>Csab-Ggor-Hsap-Mfas-Mmul-Mmur-Nleu-Ppan-Ptro[9]</name>
+      <sequence>
+        <location>Ancestor_1993_104543:539206-539255</location>
+        <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+      </sequence>
+      <clade branch_length="0.0454241021">
+        <name>Csab-Ggor-Hsap-Mfas-Mmul-Nleu-Ppan-Ptro[8]</name>
+        <sequence>
+          <location>Ancestor_1993_104544:639556-639605</location>
+          <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+        </sequence>
+        <clade branch_length="0.0109503">
+          <name>Ggor-Hsap-Nleu-Ppan-Ptro[5]</name>
+          <sequence>
+            <location>Ancestor_1993_104545:662925-662974</location>
+            <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+          </sequence>
+          <clade branch_length="0.01115901">
+            <name>Ggor-Hsap-Ppan-Ptro[4]</name>
+            <sequence>
+              <location>Ancestor_1993_104546:675425-675474</location>
+              <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+            </sequence>
+            <clade branch_length="0.00185299">
+              <name>Hsap-Ppan-Ptro[3]</name>
+              <sequence>
+                <location>Ancestor_1993_104547:676782-676831</location>
+                <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+              </sequence>
+              <clade branch_length="0.0065943">
+                <name>homo_sapiens_13_32363250_32363299[+]</name>
+                <taxonomy>
+                  <id>9606</id>
+                  <scientific_name>Homo sapiens</scientific_name>
+                  <common_name>Human</common_name>
+                </taxonomy>
+                <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">homo_sapiens</property>
+                <sequence>
+                  <location>13:32363250-32363299</location>
+                  <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+                </sequence>
+              </clade>
+              <clade branch_length="0.0043157">
+                <name>Ppan-Ptro[2]</name>
+                <sequence>
+                  <location>Ancestor_1993_104548:679266-679315</location>
+                  <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+                </sequence>
+                <clade branch_length="0.00332269">
+                  <name>pan_paniscus_13_32056242_32056291[+]</name>
+                  <taxonomy>
+                    <id>9597</id>
+                    <scientific_name>Pan paniscus</scientific_name>
+                    <common_name>Bonobo</common_name>
+                  </taxonomy>
+                  <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">pan_paniscus</property>
+                  <sequence>
+                    <location>13:32056242-32056291</location>
+                    <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+                  </sequence>
+                </clade>
+                <clade branch_length="0.00221731">
+                  <name>pan_troglodytes_13_17112102_17112151[+]</name>
+                  <taxonomy>
+                    <id>9598</id>
+                    <scientific_name>Pan troglodytes</scientific_name>
+                    <common_name>Chimpanzee</common_name>
+                  </taxonomy>
+                  <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">pan_troglodytes</property>
+                  <sequence>
+                    <location>13:17112102-17112151</location>
+                    <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+                  </sequence>
+                </clade>
+              </clade>
+            </clade>
+            <clade branch_length="0.0085751">
+              <name>gorilla_gorilla_13_14031002_14031051[+]</name>
+              <taxonomy>
+                <id>9595</id>
+                <scientific_name>Gorilla gorilla gorilla</scientific_name>
+                <common_name>Gorilla</common_name>
+              </taxonomy>
+              <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">gorilla_gorilla</property>
+              <sequence>
+                <location>13:14031002-14031051</location>
+                <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+              </sequence>
+            </clade>
+          </clade>
+          <clade branch_length="0.0196783">
+            <name>nomascus_leucogenys_9_7016854_7016903[-]</name>
+            <taxonomy>
+              <id>61853</id>
+              <scientific_name>Nomascus leucogenys</scientific_name>
+              <common_name>Gibbon</common_name>
+            </taxonomy>
+            <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">nomascus_leucogenys</property>
+            <sequence>
+              <location>9:7016854-7016903</location>
+              <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAGAT</mol_seq>
+            </sequence>
+          </clade>
+        </clade>
+        <clade branch_length="0.01846518">
+          <name>Csab-Mfas-Mmul[3]</name>
+          <sequence>
+            <location>Ancestor_1993_104549:668973-669022</location>
+            <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+          </sequence>
+          <clade branch_length="0.0117116">
+            <name>chlorocebus_sabaeus_3_11120131_11120180[+]</name>
+            <taxonomy>
+              <id>60711</id>
+              <scientific_name>Chlorocebus sabaeus</scientific_name>
+              <common_name>Vervet-AGM</common_name>
+            </taxonomy>
+            <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">chlorocebus_sabaeus</property>
+            <sequence>
+              <location>3:11120131-11120180</location>
+              <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+            </sequence>
+          </clade>
+          <clade branch_length="0.009005275">
+            <name>Mfas-Mmul[2]</name>
+            <sequence>
+              <location>Ancestor_1993_104550:700858-700907</location>
+              <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+            </sequence>
+            <clade branch_length="0.00312027">
+              <name>macaca_fascicularis_17_11446449_11446498[+]</name>
+              <taxonomy>
+                <id>9541</id>
+                <scientific_name>Macaca fascicularis</scientific_name>
+                <common_name>Crab-eating macaque</common_name>
+              </taxonomy>
+              <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">macaca_fascicularis</property>
+              <sequence>
+                <location>17:11446449-11446498</location>
+                <mol_seq is_aligned="1">CAAAAACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+              </sequence>
+            </clade>
+            <clade branch_length="0.00254973">
+              <name>macaca_mulatta_17_11361340_11361388[+]</name>
+              <taxonomy>
+                <id>9544</id>
+                <scientific_name>Macaca mulatta</scientific_name>
+                <common_name>Macaque</common_name>
+              </taxonomy>
+              <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">macaca_mulatta</property>
+              <sequence>
+                <location>17:11361340-11361388</location>
+                <mol_seq is_aligned="1">CAA-AACACTTGTTCTCTGTGTTTCTGACATAATTTCATTGAGCGCAAAT</mol_seq>
+              </sequence>
+            </clade>
+          </clade>
+        </clade>
+      </clade>
+      <clade branch_length="0.07593732">
+        <name>microcebus_murinus_13_73917186_73917235[-]</name>
+        <taxonomy>
+          <id>30608</id>
+          <scientific_name>Microcebus murinus</scientific_name>
+          <common_name>Mouse Lemur</common_name>
+        </taxonomy>
+        <property datatype="xsd:string" ref="Compara:genome_db_name" applies_to="clade">microcebus_murinus</property>
+        <sequence>
+          <location>13:73917186-73917235</location>
+          <mol_seq is_aligned="1">CAAAAACACTTGTTCTGTGTGTTTCTGACATAATTTCATCGAGCAAAAGT</mol_seq>
+        </sequence>
+      </clade>
+    </clade>
+  </phylogeny>
+</phyloxml>

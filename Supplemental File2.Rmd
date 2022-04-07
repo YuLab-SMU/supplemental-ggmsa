@@ -1,0 +1,210 @@
+---
+bibliography: Supplemental_file.bib
+biblio-style: apalike
+highlight_bw: yes
+output:
+  rmarkdown::pdf_document:
+    includes:
+        in_header: header.tex 
+    dev: "cairo_pdf"
+    latex_engine: xelatex
+    fig_caption: yes
+---
+
+**Supplemental File of**
+
+# ggmsa: a visual exploration tool for multiple sequence alignment and associated data
+
+\renewcommand{\figurename}{Fig.}
+
+\newcommand{\beginsupplement}{%
+        \setcounter{table}{0}
+        \renewcommand{\thetable}{S\arabic{table}}%
+        \setcounter{figure}{0}
+        \renewcommand{\thefigure}{S\arabic{figure}}%
+     }
+
+\beginsupplement
+
+
+```{r message=FALSE, warning=FALSE, echo = FALSE}
+library(knitr)
+knit_hooks$set(crop = hook_pdfcrop)
+opts_chunk$set(crop = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+library(ggmsa)
+library(ggplot2)
+library(magick)
+library(ggplotify)
+library(aplot)
+library(RColorBrewer)
+library(Biostrings)
+library(treeio)
+library(ggtree)
+```
+
+## Reviewer1: Require2
+
+```{r  fig.height=4, fig.width=8, warning=FALSE, message=FALSE}
+
+tpp_seq <- "data/tpp_riboswitch.fasta"
+arc_4NYG <- "data/riboswitch_thiamine.txt"
+arc_4NYD <- "data/riboswitch_hypoxanthine.txt"
+thiamine <- readSSfile(arc_4NYG, type = "Vienna" )
+hypoxanthine <- readSSfile(arc_4NYD, type = "Vienna")
+
+p <- ggmsa(tpp_seq, 
+           color = "Chemistry_NT", 
+           seq_name = F, 
+           show.legend = F, 
+           border = NA) +
+    geom_helix(helix_data = list(known = hypoxanthine, 
+                                 predicted = thiamine)) + 
+    theme(axis.text.y = element_blank())
+
+p1 <- image_read_pdf("data/bpRNA_PDB_590_ColorCodedStructures_4NYG.pdf")
+p2 <- image_read_pdf("data/bpRNA_PDB_589_ColorCodedStructures_4NYD.pdf")
+
+q1 <- as.ggplot(p1)
+q2 <- as.ggplot(p2)
+
+p_loop <- plot_list(gglist = list(q1, q2), ncol = 1)
+pp <- plot_list(gglist = list(p_loop, p), ncol = 2, tag_levels = "A")
+pp
+```
+
+## Reviewer1: Require2
+
+```{r fig.height=5, fig.width=10, warning=FALSE, message=FALSE}
+colRD <- colorRampPalette(rev(brewer.pal(n = 9, name = "OrRd")))
+colBU <- colorRampPalette(colors = rev(c("#185089","#FFF7EC")))
+
+data <- "data/s_RBD.fasta"
+mds <- read.csv("data/MDS.csv")
+del <- c("expr_lib1", "expr_lib2", 
+         "expr_avg","bind_lib1", 
+         "bind_lib2")
+
+mds <- mds[,!colnames(mds) %in% del]
+
+tidymsa <- tidy_msa(data)
+tidymsa <- assign_mds(tidymsa, mds)
+tidymsa$position <- tidymsa$position + 330 
+
+p <- ggplot() + 
+    geom_msa(data = tidymsa,
+             char_width = 0.5,
+             mds = TRUE, 
+             seq_name = TRUE, 
+             show.legend = TRUE) + 
+    ggmsa:::theme_msa() +
+    scale_fill_gradientn(name = "ACE2 binding",
+                         colors = c(colRD(75),colBU(25))) +
+    facet_msa(50) 
+p
+```
+
+
+
+```{r  fig.height=5, fig.width=10, warning=FALSE, message=FALSE}
+#read sequences
+x <- readAAStringSet("data/ACE2.fasta")
+y <- readAAStringSet("data/Spike_RBD.fasta")
+
+#read protein-protein position
+inter1 <- read.csv("data/6m0j_inter.csv")
+inter2 <- read.csv("data/7wpb_inter.csv")
+
+t1 <- tidy_msa(x, start = 19)
+t2 <- tidy_msa(y, start = 331)
+t_merge <- merge_seq(t1, gap = 100, t2)
+
+h1 <- tidy_hdata(100, inter1, t1, t2)
+h2 <- tidy_hdata(100, inter2, t1, t2)
+
+ACE2 <- t_merge[t_merge$position %in% c(h1$i,h2$i),]
+spike <- t_merge[t_merge$position %in% c(h1$j,h2$j),]
+t1_reset <- reset_pos(ACE2)
+t2_reset <- reset_pos(spike)
+sim_merge <- merge_seq(previous_seq = t1_reset,
+                       subsequent_seq = t2_reset,
+                       gap = 5, 
+                       adjust_name = FALSE)
+
+sim_h1 <- simplify_hdata(h1, sim_merge)
+sim_h2 <- simplify_hdata(h2, sim_merge)
+
+#break and label
+b <- sim_merge[sim_merge$character != "-", "position"] %>% unique()
+l <-  c(inter1$Res.no.1,inter1$Res.no..2, 
+        inter2$Res.no.1,inter2$Res.no..2) %>% unique
+
+p_sim <- ggplot() + 
+    geom_msa(data = sim_merge,border = NA, char_width = 0.5, seq_name = F) + 
+    ggmsa:::theme_msa() + 
+    geom_helix(helix_data = list(known = sim_h1, 
+                             predicted = sim_h2), 
+               overlap = T) + 
+     geom_text(mapping = aes(x = b, 
+                             y = 0.25, 
+                             label = l[order(l)]), 
+               size = 3) +
+     theme(axis.text.x = element_blank(),
+           axis.text.y = element_blank()) + 
+     scale_y_discrete(labels = c("6m0j:A(ACE2)", "7wpb:D(ACE2)")) + 
+     geom_text(aes(x = c(27.2,27.2), 
+                   y = c(1,2), 
+                   label = c("6m0j:A(Spike_RBD)", 
+                             "7wpb:D(Spike_RBD)")),
+               size = 3.5) +
+    geom_text(aes(x = c(-1.5,-1.5), 
+                  y = c(1,2), 
+                  label = c("6m0j:A(ACE2)", 
+                            "7wpb:D(ACE2)")),
+              size = 3.5)  + xlim(-2,29) 
+p_sim
+```
+
+## Reviewer2: Require1
+
+```{r  fig.height=6, fig.width=12, warning=FALSE, message=FALSE}
+x <- read.phyloxml("data/msa_phyloxml.xml")
+p <- ggtree(x, size = 2) 
+
+p1 <- adjust_ally(p, node = 11, sub = FALSE)
+tidy1 <- extract_seq(p1)
+
+p2 <- adjust_ally(p, node = 11, sub = TRUE)
+tidy2 <- extract_seq(p2)
+
+pp1 <- p1 +  geom_facet(geom = geom_msa, data = tidy1,  panel = 'MSA',
+                     font = NULL, color = "Chemistry_NT") + xlim_tree(0.15)
+
+pp2 <- p2 + geom_facet(geom = geom_msa, data = tidy2,  panel = 'MSA',
+                       font = NULL, color = "Chemistry_NT") + xlim_tree(0.15)
+
+pp <- plot_list(gglist = list(pp1,pp2), 
+                nrow = 2, 
+                tag_levels = "A", 
+                heights = c(0.4,0.6))
+pp
+```
+
+## Reviewer2: Require2
+
+```{r  fig.height=11, fig.width=12, warning=FALSE, message=FALSE}
+maf <- "data/chr1_KI270707v1_random.txt.maf"
+ref = "hg38.chr1_KI270707v1_random"
+seq_df <- read_maf(maf)
+tidy_df <- tidy_maf_df(seq_df, ref = ref)
+
+ggmaf(data = tidy_df, 
+      ref = ref, 
+      block_start = 1, 
+      block_end = 10, 
+      facet_field = 5,
+      facet_heights = c(0.4,0.6))
+```
