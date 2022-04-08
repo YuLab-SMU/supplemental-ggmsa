@@ -12,6 +12,7 @@ library(RColorBrewer)
 library(patchwork)
 library(ggplotify)
 library(aplot)
+library(magick)
 
 protein_sequences <- system.file("extdata", "sample.fasta", package = "ggmsa")
 nt_sequence <- system.file("extdata", "LeaderRepeat_All.fa", package = "ggmsa")
@@ -51,60 +52,63 @@ p2A2 <- ggSeqBundle(list(negative, positive),
             inherit.aes = FALSE, 
             size = 4)
 
-# plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,1))
-
 ##Fig.2B stacked MSA + logo&bar annotations##
 p2B <- ggmsa(protein_sequences, 221, 280, seq_name = TRUE, char_width = 0.5,border = "white") +
   geom_seqlogo(color = "Chemistry_AA") +
   geom_msaBar()
 
-
-# pp <- plot_list(gglist = list(p4A, p4B,p3), ncol = 1, heights = c(0.3,1,0.5))
-# ggsave("pp.pdf", plot = pp, width = 12, height = 9)
-
-
-##Fig.2C,2D Stacked MSA + RNA SS##
-RNA7S  <- "data/3JAJ-2D-dotbracket.txt"
-RNAP54 <- "data/4UJE-2D-dotbracket.txt"
-
+##Fig.2C double Arc##
 RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
 RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
-
-known <- readSSfile(RNA7S, type = "Vienna" )
-transat <- readSSfile(RNAP54 , type = "Vienna")
-
 RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
-
-p2C <- ggmsa(RF03120_msa, 
-             font = NULL, 
-             color = "Chemistry_NT", 
-             seq_name = F, 
-             show.legend = F, 
-             border = NA) +
-  geom_helix(helix_data = RF_arc) + 
-  theme(axis.text.y = element_blank())
-
-p2D <- ggmsa("data/5SRNA.fa",
+p2C <- ggmsa(RF03120_msa,
              font = NULL,
              color = "Chemistry_NT",
-             seq_name = T,
+             seq_name = F,
              show.legend = F,
              border = NA) +
-  geom_helix(helix_data = list(known = known, 
-                               predicted = transat),
-             overlap = F)
+  geom_helix(helix_data = RF_arc) +
+  theme(axis.text.y = element_blank())
 
-p2CD <- plot_list(gglist = list(p2C, p2D), nrow= 1,tag_levels = list(c(' ',"D"))) 
+##Fig.2C Arc + MSA##
+tpp_seq <- "data/tpp_riboswitch.fasta"
+arc_4NYG <- "data/riboswitch_thiamine.txt"
+arc_4NYD <- "data/riboswitch_hypoxanthine.txt"
+thiamine <- readSSfile(arc_4NYG, type = "Vienna" )
+hypoxanthine <- readSSfile(arc_4NYD, type = "Vienna")
+p_double_arc <- ggmsa(tpp_seq, 
+                      color = "Chemistry_NT", 
+                      seq_name = F, 
+                      show.legend = F, 
+                      border = NA) +
+  geom_helix(helix_data = list(known = hypoxanthine, 
+                               predicted = thiamine)) + 
+  theme(axis.text.y = element_blank())
+p_loop1 <- image_read_pdf(path = "data/bpRNA_PDB_590_ColorCodedStructures_4NYG.pdf",
+                          density = 300)
+p_loop2 <- image_read_pdf(path = "data/bpRNA_PDB_589_ColorCodedStructures_4NYD.pdf",
+                          density = 300)
+q1 <- as.ggplot(p_loop1)
+q2 <- as.ggplot(p_loop2)
+p_loop <- plot_list(gglist = list(q1, q2), ncol = 1, labels = c("D"," "))
+p2D <- plot_list(gglist = list(p_loop, p_double_arc), ncol = 2)
+
+#merge C&D
+p2CD <- plot_list(gglist = list(p2C, p2D), 
+                  ncol = 2,
+                  widths = c(0.6,0.4))
 
 ##plot all##
 pp <- plot_list(gglist = list(p2A, p2A2,p2B, p2CD), ncol = 1, 
-                heights = c(0.3, 1, 0.6, 0.6),
-                tag_levels = list(c("A",' ',"B", "C", "D")))
+                heights = c(0.3, 1, 0.6, 0.8),
+                labels = c("A", " ", " B", "C"))
 
 ggsave("Fig2.pdf", plot = pp, width = 12, height = 11)
 ggsave("Fig2.png", plot = pp, width = 12, height = 11)
 
 
+
+################################################################################
 ##Fig 3 sequence recombination##
 fas <- c("data/HM_KP.fa","data/CK_KP.fa")
 xx <- lapply(fas, seqdiff)
@@ -118,7 +122,7 @@ ggsave("Fig3.pdf", plot = p3, width = 10, height = 14)
 ggsave("Fig3.png", plot = p3, width = 10, height = 14)
 
 
-
+################################################################################
 ##Fig 4 graphics combination##
 
 ##Fig 4 tree + msa + genes locus
@@ -279,11 +283,22 @@ ggsave("Fig4.png",p4, width = 18, height = 13)
 ggsave("Fig4.pdf",p4, width = 18, height = 13)
 
 
+################################################################################
+##Fig 5 MAF plot
+maf <- "data/chr1_KI270707v1_random.txt.maf"
+ref = "hg38.chr1_KI270707v1_random"
+seq_df <- read_maf(maf)
+tidy_df <- tidy_maf_df(seq_df, ref = ref)
 
+p5 <- ggmaf(data = tidy_df, 
+      ref = ref, 
+      block_start = 1, 
+      block_end = 10, 
+      facet_field = 5,
+      facet_heights = c(0.45,0.55))
 
-
-
-
+ggsave("Fig5.png",p5, width = 12, height = 10)
+ggsave("Fig5.pdf",p5, width = 12, height = 10)
 
 
 
