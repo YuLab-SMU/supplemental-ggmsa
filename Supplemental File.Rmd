@@ -27,8 +27,13 @@ output:
 \beginsupplement
 
 
-
 ```{r message=FALSE, warning=FALSE, echo = FALSE}
+library(knitr)
+knit_hooks$set(crop = hook_pdfcrop)
+opts_chunk$set(crop = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
 library(ggmsa)
 library(ggplot2)
 library(ggtree)
@@ -43,7 +48,8 @@ library(RColorBrewer)
 library(patchwork)
 library(ggplotify)
 library(aplot)
-
+library(magick)
+library(treeio)
 
 
 protein_sequences <- system.file("extdata", "sample.fasta", package = "ggmsa")
@@ -51,11 +57,6 @@ nt_sequence <- system.file("extdata", "LeaderRepeat_All.fa", package = "ggmsa")
 miRNA_sequences <- system.file("extdata", "seedSample.fa", package = "ggmsa")
 tp53_sequences <-  system.file("extdata", "tp53.fa", package = "ggmsa")
 tp53_genes <- system.file("extdata", "TP53_genes.xlsx", package = "ggmsa")
-
-
-library(knitr)
-knit_hooks$set(crop = hook_pdfcrop)
-opts_chunk$set(crop = TRUE)
 ```
 
 
@@ -204,6 +205,153 @@ ggmsa(miRNA_sequences, char_width = 0.5, seq_name = T, none_bg = TRUE) +
 ```
 
 
+## Fig. \ref{fig:ancestral_sequences}: Displaying ancestral sequences for in Tree-MSA 
+
+```{r ancestral_sequences, fig.height = 6, fig.width = 12, warning = FALSE,message=FALSE, fig.cap="\\label{fig:ancestral_sequences}The ancestral sequence is displayed by selecting the internal nodes in tree-MSA plot. And there are two display modes :(A) only showing the sequence corresponding to the selected ancestral node; (B) Displaying all ancestral sequences of subtree."}
+x <- read.phyloxml("data/msa_phyloxml.xml")
+p <- ggtree(x, size = 2) + xlim_tree(0.12)
+tidymsa <- extract_seq(p)
+
+p1 <- treeMSA_plot(p, 
+                   tidymsa, 
+                   ancestral_node = 11, 
+                   sub = FALSE, 
+                   color = "Chemistry_NT")
+
+p2 <- treeMSA_plot(p, 
+                   tidymsa, 
+                   ancestral_node = 11, 
+                   sub = TRUE, 
+                   color = "Chemistry_NT")
+
+pp <- plot_list(gglist = list(p1,p2),
+                nrow = 2,
+                tag_levels = "A",
+                heights = c(0.4,0.6))
+pp
+```
+
+\newpage
+<!-- ## Fig. \ref{fig:maf}: Displaying all blocks in the MAF file -->
+
+<!-- ```{r maf, fig.height=45, fig.width=12, warning=FALSE, message=FALSE, fig.cap="\\label{fig:maf}Displaying all blocks in the MAF file"} -->
+<!-- maf <- "data/chr1_KI270707v1_random.txt.maf" -->
+<!-- ref = "hg38.chr1_KI270707v1_random" -->
+<!-- seq_df <- read_maf(maf) -->
+<!-- tidy_df <- tidy_maf_df(seq_df, ref = ref) -->
+
+<!-- ggmaf(data = tidy_df,  -->
+<!--       ref = ref,  -->
+<!--       block_start = 1, -->
+<!--       block_end = 45, -->
+<!--       facet_field = 10, -->
+<!--       facet_heights = c(1,1,1,2.5,1.5)) -->
+<!-- ``` -->
+
+## Fig. \ref{fig:dms}: DMS plot
+
+```{r dms, fig.height=5, fig.width=10, warning=FALSE, message=FALSE,fig.cap="\\label{fig:dms}DMS plot"}
+colRD <- colorRampPalette(rev(brewer.pal(n = 9, name = "OrRd")))
+colBU <- colorRampPalette(colors = rev(c("#185089","#FFF7EC")))
+
+data <- "data/s_RBD.fasta"
+mds <- read.csv("data/MDS.csv")
+del <- c("expr_lib1", "expr_lib2", 
+         "expr_avg","bind_lib1", 
+         "bind_lib2")
+
+mds <- mds[,!colnames(mds) %in% del]
+
+tidymsa <- tidy_msa(data)
+tidymsa <- assign_mds(tidymsa, mds)
+tidymsa$position <- tidymsa$position + 330 
+
+p <- ggplot() + 
+    geom_msa(data = tidymsa,
+             char_width = 0.5,
+             mds = TRUE, 
+             seq_name = TRUE, 
+             show.legend = TRUE) + 
+    theme_msa() +
+    scale_fill_gradientn(name = "ACE2 binding",
+                         colors = c(colRD(75),colBU(25))) +
+    facet_msa(50) 
+p
+```
+
+## Fig. \ref{fig:pp_all}: All sites of protein-protein interactive plot
+
+```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}All sites of protein-protein interactive plot"}
+#read sequences
+x <- readAAStringSet("data/ACE2.fasta")
+y <- readAAStringSet("data/Spike_RBD.fasta")
+
+#read protein-protein position
+inter1 <- read.csv("data/6m0j_inter.csv")
+inter2 <- read.csv("data/7wpb_inter.csv")
+
+#tidy data
+t1 <- tidy_msa(x, start = 19)
+t2 <- tidy_msa(y, start = 331)
+t_merge <- merge_seq(t1, gap = 100, t2)
+
+h1 <- tidy_hdata(100, inter1, t1, t2)
+h2 <- tidy_hdata(100, inter2, t1, t2)
+
+#protein-protein interactive plot
+p_interactive <- ggplot() + 
+    geom_msa(data = t_merge,border = NA, font = NULL, seq_name = FALSE) + 
+    theme_msa() + theme(axis.text = element_blank()) + 
+    geom_helix(helix_data = list(known = h1, predicted = h2))
+p_interactive
+```
+
+## Fig. \ref{fig:simp}: simplified p-p interactive plot
+
+```{r simp, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:simp}All simplified p-p interactive plot"}
+#simplified p-p interactive  plot
+ACE2 <- t_merge[t_merge$position %in% c(h1$i,h2$i),]
+spike <- t_merge[t_merge$position %in% c(h1$j,h2$j),]
+t1_reset <- reset_pos(ACE2)
+t2_reset <- reset_pos(spike)
+simplify_merge <- merge_seq(previous_seq = t1_reset,
+                            subsequent_seq = t2_reset,
+                            gap = 5, 
+                            adjust_name = FALSE)
+
+sim_h1 <- simplify_hdata(hdata = h1, sim_msa = simplify_merge)
+sim_h2 <- simplify_hdata(hdata = h2, sim_msa = simplify_merge)
+
+##break and label
+b <- simplify_merge[simplify_merge$character != "-", "position"] %>% unique()
+l <-  c(inter1$Res.no.1,inter1$Res.no..2, 
+        inter2$Res.no.1,inter2$Res.no..2) %>% unique
+
+p_sim <- ggplot() + 
+    geom_msa(data = simplify_merge,border = NA, char_width = 0.5, seq_name = F) + 
+    ggmsa:::theme_msa() + 
+    geom_helix(helix_data = list(known = sim_h1, 
+                                 predicted = sim_h2), 
+               overlap = T) + 
+    geom_text(mapping = aes(x = b, 
+                            y = 0.25, 
+                            label = l[order(l)]), 
+              size = 3) +
+    theme(axis.text.x = element_blank(),
+          axis.text.y = element_blank()) + 
+    scale_y_discrete(labels = c("6m0j:A(ACE2)", "7wpb:D(ACE2)")) + 
+    geom_text(aes(x = c(27.2,27.2), 
+                  y = c(1,2), 
+                  label = c("6m0j:A(Spike_RBD)", 
+                            "7wpb:D(Spike_RBD)")),
+              size = 3.5) +
+    geom_text(aes(x = c(-1.5,-1.5), 
+                  y = c(1,2), 
+                  label = c("6m0j:A(ACE2)", 
+                            "7wpb:D(ACE2)")),
+              size = 3.5)  + xlim(-2,29) 
+p_sim 
+```
 
 ## Table S1: Comparison of ggmsa with popular free MSA visualization tools
 
@@ -317,23 +465,15 @@ plot_list(gglist = list(p2a, p2b), ncol = 1, heights = c(0.3,1))
     geom_seqlogo(color = "Chemistry_AA") +
         geom_msaBar()
 ```
-**Fig. 2B**|A local visualization of the sequence alignment of the phenylalanine hydroxylase protein (PH4H) within nine species. The center panel is the main MSA plot with residues in the alignment colored according to the Chemistry color scheme (amino acids are colored according to their sidechain chemistry). The top and bottom panels are corresponding annotations with MSAs, showing the conservation patterns at each position by sequence logos and the distribution of the high-frequency residue by a bar chart, respectively. 
+**Fig. 2B**|A local visualization of the sequence alignment of the phenylalanine hydroxylase protein (PH4H) within nine species. The center panel is the main MSA plot with residues in the alignment colored according to the Chemistry color scheme (amino acids are colored according to their side chain chemistry). The top and bottom panels are corresponding annotations with MSAs, showing the conservation patterns at each position by sequence logos and the distribution of the high-frequency residue by a bar chart, respectively. 
 
-#&nbsp; 
 \newpage
 
-## Fig. 2CD: Visual methods of surveying RNA co-variation and structural changes (R code)
+## Fig. 2C: Visual methods of surveying RNA co-variation (R code)
 
 ```{r  fig.height = 11, fig.width = 10, warning=FALSE}
-RNA7S  <- "data/3JAJ-2D-dotbracket.txt"
-RNAP54 <- "data/4UJE-2D-dotbracket.txt"
-
 RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
 RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
-
-known <- readSSfile(RNA7S, type = "Vienna" )
-transat <- readSSfile(RNAP54 , type = "Vienna")
-
 
 RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
 
@@ -346,23 +486,44 @@ p2C <- ggmsa(RF03120_msa,
         geom_helix(helix_data = RF_arc) + 
         theme(axis.text.y = element_blank())
 
-p2D <- ggmsa("data/5SRNA.fa",
-             font = NULL,
-             color = "Chemistry_NT",
-             seq_name = T,
-             show.legend = T,
-             border = NA) +
-  geom_helix(helix_data = list(known = known, 
-                               predicted = transat),
-             overlap = F)
-
-p2CD <- plot_list(gglist = list(p2C, p2D), 
-                  ncol = 1,heights = c(0.15), 
-                  tag_levels = list(c("2C","2D" )))
- 
-p2CD
+p2C
 ```
-**Fig. 2CD**| **(C)** The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. Compensatory mutations in MSA can be detected by checking alignment columns in positions corresponding to arcs. **(D)** The sequence and secondary structure of 5S Ribosomal RNA from the PDB database. The arc above the sequence represents the structure of the engaged state of the mammalian SRP-ribosome complex (3JAJ) and the bottom arc depicts the 5S RNA structural changes in a eukaryotic-specific ribosome rearrangement (4UJE).
+**Fig. 2C**| The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. Compensatory mutations in MSA can be detected by checking alignment columns in positions corresponding to arcs. 
+
+
+## Fig. 2D: Visual RNA structural changes (R code)
+
+```{r  fig.height=4, fig.width=8, warning=FALSE, message=FALSE}
+
+tpp_seq <- "data/tpp_riboswitch.fasta"
+arc_4NYG <- "data/riboswitch_thiamine.txt"
+arc_4NYD <- "data/riboswitch_hypoxanthine.txt"
+thiamine <- readSSfile(arc_4NYG, type = "Vienna" )
+hypoxanthine <- readSSfile(arc_4NYD, type = "Vienna")
+
+p <- ggmsa(tpp_seq, 
+           color = "Chemistry_NT", 
+           seq_name = F, 
+           show.legend = F, 
+           border = NA) +
+    geom_helix(helix_data = list(known = hypoxanthine, 
+                                 predicted = thiamine)) + 
+    theme(axis.text.y = element_blank())
+
+p1 <- image_read_pdf(path = "data/bpRNA_PDB_590_ColorCodedStructures_4NYG.pdf",
+                     density = 300)
+p2 <- image_read_pdf(path = "data/bpRNA_PDB_589_ColorCodedStructures_4NYD.pdf",
+                     density = 300)
+
+q1 <- as.ggplot(p1)
+q2 <- as.ggplot(p2)
+
+p_loop <- plot_list(gglist = list(q1, q2), ncol = 1)
+pp <- plot_list(gglist = list(p_loop, p), ncol = 2)
+pp
+```
+**Fig. 2D**|**(D)** Exploring RNA structural changes by geom_helix annotation. Stem-loop diagram and arc diagram of secondary structure changes of TPP-riboswitches after bounding to Hypoxanthine and Thiamine respectively. The sequence of arc plot is the TPP-riboswitch RNA. The arc above the sequence represents the structure of the TPP-riboswitch bound to Thiamine and the bottom arc depicts TPP-riboswitch RNA structural changes binding to Hypoxanthine. The two stem-loop diagrams on the right correspond to the upper and lower arcs respectively. Stem-loop annotation of TPP-riboswitch from bpRNA-1m database (bpRNA ID: bpRNA_PDB_589 and bpRNA_PDB_590), and also corresponding PDB ID: 4NYD, 4NYG. 
+
 
 ## Fig. 3: Visual exploration for sequence recombination signal (R code)
 
@@ -538,8 +699,21 @@ p4B
 ```
 **Fig. 4B**| The summarized visualization for different E.coli lineages. The alignment of btuR gene was selected to generate a phylogenetic tree which was stained according to the corresponding lineages. The boxplots represent antimicrobial resistance (AMR) and virulence profiles of the lineages. Number of antimicrobial classes and virulence genes per isolate colored by multidrug-resistant (MDR) classes and the most prevalent predicted pathotype in the lineage.
 
+## Fig. 5: Visualization of genome alignment in MAF format (R code)
+```{r  fig.height=11, fig.width=12, warning=FALSE, message=FALSE}
+maf <- "data/chr1_KI270707v1_random.txt.maf"
+ref = "hg38.chr1_KI270707v1_random"
+seq_df <- read_maf(maf)
+tidy_df <- tidy_maf_df(seq_df, ref = ref)
 
-## Session Info
+ggmaf(data = tidy_df, 
+      ref = ref, 
+      block_start = 1, 
+      block_end = 10, 
+      facet_field = 5,
+      facet_heights = c(0.4,0.6))
+```
+**Fig. 5**| Visualization of the first 10 blocks of different species genomes aligning to  human hg38.chr1. The 10 blocks are divided into two facets: block 1-block 5 is in the first facet, and block 6-block 10 is in the second facet. In each facet, the upper panel shows the original genome coordinates and the lower panel shows genome alignments, with colors indicating positive and negative strands. In the genome alignments panel, the first genome with black border represents the reference genome hg38.chr1 and subsequences in each blocks does not show border color. In each block, the first sequence is the reference genome fragment, followed by other species fragments. Fragments in each block can correspond to labels B1-B10 on the original genome coordinates panel.
 
  Here is the output of sessionInfo() on the system on which this document was compiled:
 ```{r echo = FALSE}
