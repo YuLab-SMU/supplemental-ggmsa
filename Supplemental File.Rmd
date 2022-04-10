@@ -248,28 +248,30 @@ pp
 <!--       facet_heights = c(1,1,1,2.5,1.5)) -->
 <!-- ``` -->
 
-## Fig. \ref{fig:dms}: DMS plot
+## Fig. \ref{fig:dms}: MSA of SARS-CoV-2 Spike protein RBD coloring by RBD-hACE2 binding affinity
 
-```{r dms, fig.height=5, fig.width=10, warning=FALSE, message=FALSE,fig.cap="\\label{fig:dms}DMS plot"}
+We applied DMS data of ACE2-binding affinity to MSA to functionally annotate the mutated sites in the sequence. In addition, the application scope of arc diagram is extended to the interaction process of ACE2-RBD. Through MSA that used ACE2-binding affinity annotation and ACE2-RBD interaction arc diagram, we can observe how the mutation of Omicron affects ACE2-RBD interaction. Although DMS data only reveal the binding affinity of a single amino acid mutation (Fig. S10), we think that MSA plot annotated with DMS data can reflect changes in ACE2-RBD interactions to a certain extent. Arc plot representing ACE2-RBD interactions prove this (Fig. S11,S12). In the ACE2-RBD arc diagram, Omicron mutation sites K417N,G446S and G496S show loss of hydrogen bond interaction, and these sites all show decreased binding ability in the binding affinity annotation diagram. The N501Y mutation in the binding affinity diagram shows an increased binding ability, which may form a new binding site. This has not been shown in Arc plot (possible cause: the interaction site information contained in the 7WPB is not completely accurate), but has been reported in other literature [@yin2022structures]. 
+
+```{r dms, fig.height=5, fig.width=10, warning=FALSE, message=FALSE,fig.cap="\\label{fig:dms}Mutations in Spike protein Receptor Binding Domain (RBD) are compared with wild-type SARS-CoV-2 and four other strains (Beta, Gamma, Delta ,and Omicron, all from GISAID). The colors in MSA showing RBD-hACE2 (human Angiotensin converting enzyme 2) binding affinity scores. ACE2-binding affinity are shown in shades of blue or red representing higher or lower ACE2 affinity, respectively. The ACE2 binding scores are from Deep Mutational Scanning (DMS) of SARS-CoV-2 RBD. Scores represent binding constants (Δlog10 KD) relative to the wild-type reference amino acid."}
 colRD <- colorRampPalette(rev(brewer.pal(n = 9, name = "OrRd")))
 colBU <- colorRampPalette(colors = rev(c("#185089","#FFF7EC")))
 
 data <- "data/s_RBD.fasta"
-mds <- read.csv("data/MDS.csv")
+dms <- read.csv("data/DMS.csv")
 del <- c("expr_lib1", "expr_lib2", 
          "expr_avg","bind_lib1", 
          "bind_lib2")
-
-mds <- mds[,!colnames(mds) %in% del]
+dms <- dms[,!colnames(dms) %in% del]
 
 tidymsa <- tidy_msa(data)
-tidymsa <- assign_mds(tidymsa, mds)
+tidymsa <- assign_dms(tidymsa, dms)
+#Mapping the position to the protein-protein interaction plot
 tidymsa$position <- tidymsa$position + 330 
 
 p <- ggplot() + 
     geom_msa(data = tidymsa,
              char_width = 0.5,
-             mds = TRUE, 
+             dms = TRUE, 
              seq_name = TRUE, 
              show.legend = TRUE) + 
     theme_msa() +
@@ -279,9 +281,9 @@ p <- ggplot() +
 p
 ```
 
-## Fig. \ref{fig:pp_all}: All sites of protein-protein interactive plot
+## Fig. \ref{fig:pp_all}: Arc diagram of ACE2-RBD interaction
 
-```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}All sites of protein-protein interactive plot"}
+```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all} Arc diagram of ACE2-RBD interaction. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J."}
 #read sequences
 x <- readAAStringSet("data/ACE2.fasta")
 y <- readAAStringSet("data/Spike_RBD.fasta")
@@ -306,9 +308,9 @@ p_interactive <- ggplot() +
 p_interactive
 ```
 
-## Fig. \ref{fig:simp}: simplified p-p interactive plot
+## Fig. \ref{fig:simp}: simplified arc diagram of ACE2-RBD interaction
 
-```{r simp, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:simp}All simplified p-p interactive plot"}
+```{r simp, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:simp} simplified ACE2-RBD interaction arc plot.The arc plot only shows the residues at the sites of interaction."}
 #simplified p-p interactive  plot
 ACE2 <- t_merge[t_merge$position %in% c(h1$i,h2$i),]
 spike <- t_merge[t_merge$position %in% c(h1$j,h2$j),]
@@ -332,7 +334,7 @@ p_sim <- ggplot() +
     ggmsa:::theme_msa() + 
     geom_helix(helix_data = list(known = sim_h1, 
                                  predicted = sim_h2), 
-               overlap = T) + 
+               overlap = F) + 
     geom_text(mapping = aes(x = b, 
                             y = 0.25, 
                             label = l[order(l)]), 
@@ -352,6 +354,8 @@ p_sim <- ggplot() +
               size = 3.5)  + xlim(-2,29) 
 p_sim 
 ```
+
+\newpage
 
 ## Table S1: Comparison of ggmsa with popular free MSA visualization tools
 
@@ -522,7 +526,7 @@ p_loop <- plot_list(gglist = list(q1, q2), ncol = 1)
 pp <- plot_list(gglist = list(p_loop, p), ncol = 2)
 pp
 ```
-**Fig. 2D**|**(D)** Exploring RNA structural changes by geom_helix annotation. Stem-loop diagram and arc diagram of secondary structure changes of TPP-riboswitches after bounding to Hypoxanthine and Thiamine respectively. The sequence of arc plot is the TPP-riboswitch RNA. The arc above the sequence represents the structure of the TPP-riboswitch bound to Thiamine and the bottom arc depicts TPP-riboswitch RNA structural changes binding to Hypoxanthine. The two stem-loop diagrams on the right correspond to the upper and lower arcs respectively. Stem-loop annotation of TPP-riboswitch from bpRNA-1m database (bpRNA ID: bpRNA_PDB_589 and bpRNA_PDB_590), and also corresponding PDB ID: 4NYD, 4NYG. 
+**Fig. 2D**|Exploring RNA structural changes by geom_helix annotation. Stem-loop diagram and arc diagram of secondary structure changes of TPP-riboswitches after bounding to Hypoxanthine and Thiamine respectively. The sequence of arc plot is the TPP-riboswitch RNA. The arc above the sequence represents the structure of the TPP-riboswitch bound to Thiamine and the bottom arc depicts TPP-riboswitch RNA structural changes binding to Hypoxanthine. The two stem-loop diagrams on the right correspond to the upper and lower arcs respectively. Stem-loop annotation of TPP-riboswitch from bpRNA-1m database (bpRNA ID: bpRNA_PDB_589 and bpRNA_PDB_590), and also corresponding PDB ID: 4NYD, 4NYG. 
 
 
 ## Fig. 3: Visual exploration for sequence recombination signal (R code)
@@ -723,6 +727,7 @@ sessionInfo()
 
 &nbsp;
 
+\newpage
 
 ## References
 
