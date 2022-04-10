@@ -60,8 +60,8 @@ tp53_genes <- system.file("extdata", "TP53_genes.xlsx", package = "ggmsa")
 ```
 
 
-## Fig. \ref{fig:color_scheme}: Examples of amino acid and nucleotide color schemes in ggmsa
-```{r color_scheme, echo=FALSE, fig.height=5, fig.width=5, fig.cap="\\label{fig:color_scheme}(A) Examples of amino acid color schemes. Schemes are either quantitative, reflecting empirical or statistical properties of amino acids; or qualitative, reflecting physicochemical attributes. Chemistry is colored according to side-chain chemistry also used in DNASTAR applications [@Burland2000DNASTAR]; Shapely matches the RasMol amino acid color schemes, which are, in turn, based on Robert Fletterick’s Shapely models. Zappo is a qualitative scheme developed by M. Clamp. The residues are colored according to their physicochemical properties; Taylor [@Taylor1997Residual] is taken from Taylor and is also used in JalView [@waterhouse2009jalview]; Hydrophobicity colors the residues in the alignment based on the hydrophobicity table [@kyte1982simple]. B, X, Z, J, O, and U are amino acid ambiguity codes: B is aspartate or asparagine; Z is glutamate or glutamine; X, J, O, U is an unknown (or ‘other’); “-” indicate a gap. (B) Examples of nucleotide color schemes used by ggmsa."}
+## Fig. \ref{fig:color_scheme}: Amino acid and nucleotide color schemes in ggmsa
+```{r color_scheme, echo=FALSE, fig.height=5, fig.width=5, fig.cap="\\label{fig:color_scheme} **Color schemes in ggmsa.** (A) Amino acid color schemes. Schemes are either quantitative, reflecting empirical or statistical properties of amino acids; or qualitative, reflecting physicochemical attributes. Chemistry is colored according to side-chain chemistry and is also used in DNASTAR applications [@Burland2000DNASTAR]; Shapely matches the RasMol amino acid color schemes, which are, in turn, based on Robert Fletterick’s Shapely models. Zappo is a qualitative scheme developed by M. Clamp. The residues are colored according to their physicochemical properties; Taylor [@Taylor1997Residual] is taken from Taylor and is also used in JalView [@waterhouse2009jalview]; Hydrophobicity colors the residues in the alignment based on the hydrophobicity table [@kyte1982simple]. B, X, Z, J, O, and U are amino acid ambiguity codes: B is aspartate or asparagine; Z is glutamate or glutamine; X, J, O, U is an unknown (or ‘other’); “-” indicate a gap. (B) Nucleotide color schemes used by ggmsa."}
 
 library(patchwork)
 scheme_AA <- ggmsa:::scheme_AA
@@ -110,8 +110,8 @@ p2_sch <- ggplot(data = my_schemeNT, aes_(x =~ scheme, y =~ char, fill =~ I(colo
 
 ## Fig. \ref{fig:facet}: MSA view with break down layout
 
-`facet_msa()` module allows to showing more alignment data in a restricted canvas. The long sequence was broken down and displayed in several lines.
-```{r facet, fig.height = 6, fig.width = 10, message=FALSE, warning=FALSE, fig.cap="\\label{fig:facet} The long sequence was broken down and displayed in several lines."}
+`facet_msa()` module allows for showing more alignment data in a restricted canvas. The long sequence is broken down and displayed in several lines.
+```{r facet, fig.height = 6, fig.width = 10, message=FALSE, warning=FALSE, fig.cap="\\label{fig:facet} **MSA view with break down layout**. The long sequence is displayed in several lines."}
  # 4 fields
  ggmsa(protein_sequences, start = 0, end = 400, font = NULL, color = "Chemistry_AA") + 
     facet_msa(field = 100)
@@ -120,8 +120,9 @@ p2_sch <- ggplot(data = my_schemeNT, aes_(x =~ scheme, y =~ char, fill =~ I(colo
 
 ## Fig. \ref{fig:treeExtra}: MSA view with circular layout tree
 
-A specific layout of the alignment can also be displayed by linking ggtreeExtra [@xu2021ggtreeextra]. `geom_fruit` will automatically align MSA graphs to the tree with circular layout 
-```{r treeExtra, fig.height=3, fig.width =3, message = FALSE, warning= FALSE, fig.cap="\\label{fig:treeExtra}Example of MSA view with circular layout phylogenetic tree."}
+With ggtreeExtra [@xu2021ggtreeextra], displaying alignment in a circular layout can also be supported. The `geom_fruit()` will automatically align the MSA graphs to the tree with a circular layout.
+
+```{r treeExtra, fig.height=3, fig.width =3, message = FALSE, warning= FALSE, fig.cap="\\label{fig:treeExtra}**Example of MSA view with circular layout phylogenetic tree**."}
 library(ggtree)
 library(ggtreeExtra)
 sequences <- system.file("extdata", "sequence-link-tree.fasta", package = "ggmsa")
@@ -139,10 +140,11 @@ p1 + geom_fruit(data = data, geom = geom_msa, offset = 0,
 ```
 
 
-## Fig. \ref{fig:tree}: Visualizing MSA with phylogenetic tree
+## Fig. \ref{fig:tree}: Visualizing MSA with a phylogenetic tree
 
-ggmsa supports to link ggtree [@yu2017ggtree] by `geom_facet()`. Sequence order will automatically align with left nodes.
-```{r tree, fig.height = 3, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:tree}A tree resulting from the application of phylogenetic analysis to the alignment."}
+Similar to `geom_fruit()`, the `geom_facet()` provided in ggtree [@yu2017ggtree] also works with ggmsa to display MSA with a phylogenetic tree.
+
+```{r tree, fig.height = 3, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:tree}**A phylogenetic tree with MSA that it was built from**."}
  x <- readAAStringSet(protein_sequences)
  d <- as.dist(stringDist(x, method = "hamming")/width(x)[1])
  library(ape)
