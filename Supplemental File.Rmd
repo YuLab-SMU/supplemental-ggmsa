@@ -60,6 +60,8 @@ tp53_genes <- system.file("extdata", "TP53_genes.xlsx", package = "ggmsa")
 ```
 
 
+\newpage
+
 ## Fig. \ref{fig:color_scheme}: Amino acid and nucleotide color schemes in ggmsa
 ```{r color_scheme, echo=FALSE, fig.height=5, fig.width=5, fig.cap="\\label{fig:color_scheme} **Color schemes in ggmsa.** (A) Amino acid color schemes. Schemes are either quantitative, reflecting empirical or statistical properties of amino acids; or qualitative, reflecting physicochemical attributes. Chemistry is colored according to side-chain chemistry and is also used in DNASTAR applications [@Burland2000DNASTAR]; Shapely matches the RasMol amino acid color schemes, which are, in turn, based on Robert Fletterick’s Shapely models. Zappo is a qualitative scheme developed by M. Clamp. The residues are colored according to their physicochemical properties; Taylor [@Taylor1997Residual] is taken from Taylor and is also used in JalView [@waterhouse2009jalview]; Hydrophobicity colors the residues in the alignment based on the hydrophobicity table [@kyte1982simple]. B, X, Z, J, O, and U are amino acid ambiguity codes: B is aspartate or asparagine; Z is glutamate or glutamine; X, J, O, U is an unknown (or ‘other’); “-” indicate a gap. (B) Nucleotide color schemes used by ggmsa."}
 
@@ -160,9 +162,9 @@ Similar to `geom_fruit()`, the `geom_facet()` provided in ggtree [@yu2017ggtree]
 
 \newpage
 
-## Fig. \ref{fig:re-order_bundles}: Re-designated residues order in Sequence bundle
+## Fig. \ref{fig:re-order_bundles}: Reassign residue order in sequence bundle
 
-```{r re-order_bundles, fig.height = 4, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:re-order_bundles}The preference of residues’ physicochemical property can be reflected by adjusting the order of letters on the y-axis. It shows re-dsignaed residues order according to amino acid molecule weight. The large molecule is at the bottom"}
+```{r re-order_bundles, fig.height = 4, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:re-order_bundles}**Reassign residue order in sequence bundle**. The preference of residues’ physicochemical properties can be reflected by adjusting the order of the letters on the y-axis. This figure reassigns residue  order with amino acid molecule weight from light (top) to heavy (bottom)."}
 negative <-  system.file("extdata", "Gram-negative_AKL.fasta", 
                          package = "ggmsa")
 positive <-  system.file("extdata", "Gram-positive_AKL.fasta", 
@@ -179,19 +181,19 @@ ggSeqBundle(list(negative, positive),
 
 \newpage
 
-## Fig. \ref{fig:conse}: The consensus sequence
+## Fig. \ref{fig:conse}: MSA with consensus sequence
 
-```{r conse, fig.height = 2, fig.width = 8, warning = FALSE, fig.cap="\\label{fig:conse}Example of consensus sequence for an MSA. The consensus sequence is displayed above the alignment and shows which residues are conserved, which residues are variable. A consensus is constructed from the most frequent residues at each site."}
+```{r conse, fig.height = 2, fig.width = 8, warning = FALSE, fig.cap="\\label{fig:conse}**Example of displaying consensus sequence for an MSA**. The consensus sequence is displayed above the alignment and shows which residues are conserved and which residues are variable. A consensus is constructed from the most frequent residue at each site."}
 ggmsa(protein_sequences, 300, 350, char_width = 0.5, 
-      seq_name = T, consensus_views = T, use_dot = T)
+      seq_name = TRUE, consensus_views = TRUE, use_dot = TRUE)
 ```
 
 
 
-## Fig. \ref{fig:seed1}: miRNA sequence seed region annotation for MSA (asterisks)
+## Fig. \ref{fig:seed1}: Seed region annotation (asterisks) for miRNA sequences 
 
-`geom_seed()` helps to identify microRNA seed region by asterisks or shaded area. The seed region is a conserved heptameric sequence that is mostly situated at positions 2-7 from the miRNA 5´-end.
-```{r seed1, fig.height = 2, fig.width =6, warning = FALSE, message=FALSE, fig.cap="\\label{fig:seed1}Example of highlighting miRNA seed region. Asterisks are used for marking the seed region. "}
+The `geom_seed()` helps to identify microRNA seed region by adding asterisks or a shaded block. The seed region is a conserved heptameric sequence that is mostly situated at positions 2-7 from the miRNA 5´-end.
+```{r seed1, fig.height = 2, fig.width =6, warning = FALSE, message=FALSE, fig.cap="\\label{fig:seed1}**Example of highlighting miRNA seed region**. Asterisks are used for marking the seed region. "}
 miRNA_sequences <- system.file("extdata", "seedSample.fa", package = "ggmsa")
 ggmsa(miRNA_sequences, char_width = 0.5, color="Chemistry_NT") + 
     geom_seed(seed = "GAGGUAG", star = TRUE) + coord_cartesian()
@@ -199,17 +201,17 @@ ggmsa(miRNA_sequences, char_width = 0.5, color="Chemistry_NT") +
 
 \newpage
 
-## Fig. \ref{fig:seed2}: miRNA sequence seed region annotation for MSA (The shaded block)
+## Fig. \ref{fig:seed2}: Seed region annotation (shaded block) for miRNA sequences 
 
-```{r seed2, fig.height = 2, fig.width = 6, warning = FALSE,message=FALSE, fig.cap="\\label{fig:seed2}Example of highlighting miRNA seed region. Annotation of sequence seed region with the shaded block"}
-ggmsa(miRNA_sequences, char_width = 0.5, seq_name = T, none_bg = TRUE) + 
+```{r seed2, fig.height = 2, fig.width = 6, warning = FALSE,message=FALSE, fig.cap="\\label{fig:seed2}**Example of highlighting miRNA seed region**. Annotation of sequence seed region with a shaded block"}
+ggmsa(miRNA_sequences, char_width = 0.5, seq_name = TRUE, none_bg = TRUE) + 
     geom_seed(seed = "GAGGUAG") + coord_cartesian()
 ```
 
 
-## Fig. \ref{fig:ancestral_sequences}: Displaying ancestral sequences for in Tree-MSA 
+## Fig. \ref{fig:ancestral_sequences}: Displaying ancestral sequences in Tree-MSA plot
 
-```{r ancestral_sequences, fig.height = 6, fig.width = 12, warning = FALSE,message=FALSE, fig.cap="\\label{fig:ancestral_sequences}The ancestral sequence is displayed by selecting the internal nodes in tree-MSA plot. And there are two display modes :(A) only showing the sequence corresponding to the selected ancestral node; (B) Displaying all ancestral sequences of subtree."}
+```{r ancestral_sequences, fig.height = 6, fig.width = 12, warning = FALSE,message=FALSE, fig.cap="\\label{fig:ancestral_sequences}**Displaying ancestral sequences in tree-MSA plot**. There are two display modes: (A) only display the sequence corresponding to the selected ancestral node; (B) display all ancestral sequences of the subtree."}
 x <- read.phyloxml("data/msa_phyloxml.xml")
 p <- ggtree(x, size = 2) + xlim_tree(0.12)
 tidymsa <- extract_seq(p)
@@ -252,9 +254,9 @@ pp
 
 ## Fig. \ref{fig:dms}: MSA of SARS-CoV-2 Spike protein RBD coloring by RBD-hACE2 binding affinity
 
-We applied DMS data of ACE2-binding affinity to MSA to functionally annotate the mutated sites in the sequence. In addition, the application scope of arc diagram is extended to the interaction process of ACE2-RBD. Through MSA that used ACE2-binding affinity annotation and ACE2-RBD interaction arc diagram, we can observe how the mutation of Omicron affects ACE2-RBD interaction. Although DMS data only reveal the binding affinity of a single amino acid mutation (Fig. S10), we think that MSA plot annotated with DMS data can reflect changes in ACE2-RBD interactions to a certain extent. Arc plot representing ACE2-RBD interactions prove this (Fig. S11,S12). In the ACE2-RBD arc diagram, Omicron mutation sites K417N,G446S and G496S show loss of hydrogen bond interaction, and these sites all show decreased binding ability in the binding affinity annotation diagram. The N501Y mutation in the binding affinity diagram shows an increased binding ability, which may form a new binding site. This has not been shown in Arc plot (possible cause: the interaction site information contained in the 7WPB is not completely accurate), but has been reported in other literature [@yin2022structures]. 
+We applied the Deep Mutational Scanning (DMS) data of ACE2-binding affinity to MSA to functionally annotate the mutated sites in the sequence. In addition, the application scope of the arc diagram is extended to the interaction process of ACE2-RBD (Fig. \ref{fig:pp_all}). Through MSA that used ACE2-binding affinity annotation and ACE2-RBD interaction arc diagram, we can observe how the mutation of Omicron affects ACE2-RBD interaction. Although DMS data only reveal the binding affinity of a single amino acid mutation (Fig. \ref{fig:dms}), we believe that an MSA plot annotated with DMS data can reflect changes in ACE2-RBD interactions to a certain extent. Arc plot representing ACE2-RBD interactions prove this (Fig. \ref{fig:pp_all}, \ref{fig:simp}). In the ACE2-RBD arc diagram, Omicron mutation sites K417N, G446S, and G496S show loss of hydrogen bond interaction, and these sites all show decreased binding ability in the binding affinity annotation diagram. The N501Y mutation in the binding affinity diagram shows an increased binding ability, which may form a new binding site. This has not been shown in the Arc plot (possible cause: the interaction site information contained in the 7WPB is not completely accurate) but has been reported in other literature [@yin2022structures]. 
 
-```{r dms, fig.height=5, fig.width=10, warning=FALSE, message=FALSE,fig.cap="\\label{fig:dms}Mutations in Spike protein Receptor Binding Domain (RBD) are compared with wild-type SARS-CoV-2 and four other strains (Beta, Gamma, Delta ,and Omicron, all from GISAID). The colors in MSA showing RBD-hACE2 (human Angiotensin converting enzyme 2) binding affinity scores. ACE2-binding affinity are shown in shades of blue or red representing higher or lower ACE2 affinity, respectively. The ACE2 binding scores are from Deep Mutational Scanning (DMS) of SARS-CoV-2 RBD. Scores represent binding constants (Δlog10 KD) relative to the wild-type reference amino acid."}
+```{r dms, fig.height=5, fig.width=10, warning=FALSE, message=FALSE,fig.cap="\\label{fig:dms}**MSA of SARS-CoV-2 Spike protein RBD**. Mutations in Spike protein Receptor Binding Domain (RBD) are compared with wild-type SARS-CoV-2 and four other strains (Beta, Gamma, Delta, and Omicron, all from GISAID). The colors in MSA show RBD-hACE2 (human Angiotensin-converting enzyme 2) binding affinity scores. ACE2-binding affinity is shown in shades of blue or red representing higher or lower ACE2 affinity, respectively. The ACE2 binding scores are from the Deep Mutational Scanning (DMS) of SARS-CoV-2 RBD. Scores represent binding constants (Δlog10 KD) relative to the wild-type reference amino acid."}
 colRD <- colorRampPalette(rev(brewer.pal(n = 9, name = "OrRd")))
 colBU <- colorRampPalette(colors = rev(c("#185089","#FFF7EC")))
 
@@ -285,7 +287,7 @@ p
 
 ## Fig. \ref{fig:pp_all}: Arc diagram of ACE2-RBD interaction
 
-```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all} Arc diagram of ACE2-RBD interaction. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J."}
+```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}**Arc diagram of ACE2-RBD interaction**. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J."}
 #read sequences
 x <- readAAStringSet("data/ACE2.fasta")
 y <- readAAStringSet("data/Spike_RBD.fasta")
@@ -310,9 +312,9 @@ p_interactive <- ggplot() +
 p_interactive
 ```
 
-## Fig. \ref{fig:simp}: simplified arc diagram of ACE2-RBD interaction
+## Fig. \ref{fig:simp}: A simplified arc diagram of ACE2-RBD interaction
 
-```{r simp, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:simp} simplified ACE2-RBD interaction arc plot.The arc plot only shows the residues at the sites of interaction."}
+```{r simp, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:simp}**A simplified version of the ACE2-RBD interaction arc plot**. The arc plot only shows the residues at the interaction sites."}
 #simplified p-p interactive  plot
 ACE2 <- t_merge[t_merge$position %in% c(h1$i,h2$i),]
 spike <- t_merge[t_merge$position %in% c(h1$j,h2$j),]
@@ -390,16 +392,16 @@ compare_tab <-
   knitr::kable(
                caption=caption,
                col.names=header,
-               booktabs = T,
+               booktabs = TRUE,
                position = "!h",
                escape=F,
                align = "c"
   ) %>%
   row_spec(0, bold=T) %>%
-  row_spec(row=c(1,2,3,4,5), hline_after=T) %>%
+  row_spec(row=c(1,2,3,4,5), hline_after=TRUE) %>%
   kable_styling(
                 latex_options = c("striped"),
-                full_width = T,
+                full_width = TRUE,
                 font_size = 6.6,
                 stripe_color = "gray!10",
                 position="center"
@@ -461,7 +463,7 @@ p2b <- ggSeqBundle(list(negative, positive),
 
 plot_list(gglist = list(p2a, p2b), ncol = 1, heights = c(0.3,1))
 ```
-**Fig. 2A**| The combination of sequence logos and sequence bundles. The data contain adenylate kinase lid (AKL) domain both of Gram-negative and Gram-negative bacteria. 100 sequences for each groups. The sequence logo (top panel) represents the AKL sequence pattern and the sequence bundle (bottom panel) represents the different residues relationship between Gram-negative (orange) and Gram-negative (purple) bacteria. The site at 4, 7, 9, 24, 27 and 29 has exclusive pattern (His4, Ser7, Arg9, Asp24, Thr27, Glu29) in the Gram-negative sequences. And the site at 4, 7, 24 and 27 both contain the Cysteines in the Gram-positive sequences. These residues relationship in agreement with the structural stability with the AKL domain. Gram-negatives form hydrogen bonding network by the exclusive pattern and Gram-positives bound metal ion to form coordinated tetrahedral by Cys. (Date from BioVis2013 and repeated example from Science Practice)
+**Fig. 2A**| **The combination of sequence logos and sequence bundles**. The data contain the adenylate kinase lid (AKL) domain both of Gram-negative and Gram-negative bacteria. 100 sequences for each group. The sequence logo (top panel) represents the AKL sequence pattern and the sequence bundle (bottom panel) represents the different residues relationship between Gram-negative (orange) and Gram-negative (purple) bacteria. The site at 4, 7, 9, 24, 27, and 29 has an exclusive pattern (His4, Ser7, Arg9, Asp24, Thr27, Glu29) in the Gram-negative sequences. And the site at 4, 7, 24, and 27 both contain the Cysteines in the Gram-positive sequences. These residues relationship in agreement with the structural stability of the AKL domain. Gram-negatives form a hydrogen-bonding network by the exclusive pattern and Gram-positive bound metal ion to form coordinated tetrahedrally by Cys. (Date from BioVis2013 and repeated example from Science Practice)
 
 
 
@@ -471,7 +473,7 @@ plot_list(gglist = list(p2a, p2b), ncol = 1, heights = c(0.3,1))
     geom_seqlogo(color = "Chemistry_AA") +
         geom_msaBar()
 ```
-**Fig. 2B**|A local visualization of the sequence alignment of the phenylalanine hydroxylase protein (PH4H) within nine species. The center panel is the main MSA plot with residues in the alignment colored according to the Chemistry color scheme (amino acids are colored according to their side chain chemistry). The top and bottom panels are corresponding annotations with MSAs, showing the conservation patterns at each position by sequence logos and the distribution of the high-frequency residue by a bar chart, respectively. 
+**Fig. 2B**| **A local visualization of the sequence alignment of the phenylalanine hydroxylase protein (PH4H) within nine species**. The center panel is the main MSA plot with residues in the alignment colored according to the Chemistry color scheme (amino acids are colored according to their side-chain chemistry). The top and bottom panels are corresponding annotations with MSAs, showing the conservation patterns at each position by sequence logos and the distribution of the high-frequency residue by a bar chart, respectively. 
 
 \newpage
 
@@ -494,7 +496,7 @@ p2C <- ggmsa(RF03120_msa,
 
 p2C
 ```
-**Fig. 2C**| The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. Compensatory mutations in MSA can be detected by checking alignment columns in positions corresponding to arcs. 
+**Fig. 2C**| **Visual methods of surveying RNA co-variation**. The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. Compensatory mutations in MSA can be detected by checking alignment columns in positions corresponding to arcs. 
 
 
 ## Fig. 2D: Visual RNA structural changes (R code)
@@ -528,7 +530,7 @@ p_loop <- plot_list(gglist = list(q1, q2), ncol = 1)
 pp <- plot_list(gglist = list(p_loop, p), ncol = 2)
 pp
 ```
-**Fig. 2D**|Exploring RNA structural changes by geom_helix annotation. Stem-loop diagram and arc diagram of secondary structure changes of TPP-riboswitches after bounding to Hypoxanthine and Thiamine respectively. The sequence of arc plot is the TPP-riboswitch RNA. The arc above the sequence represents the structure of the TPP-riboswitch bound to Thiamine and the bottom arc depicts TPP-riboswitch RNA structural changes binding to Hypoxanthine. The two stem-loop diagrams on the right correspond to the upper and lower arcs respectively. Stem-loop annotation of TPP-riboswitch from bpRNA-1m database (bpRNA ID: bpRNA_PDB_589 and bpRNA_PDB_590), and also corresponding PDB ID: 4NYD, 4NYG. 
+**Fig. 2D**| **Exploring RNA structural changes by `geom_helix` annotation**. Stem-loop diagram and arc diagram of secondary structure changes of TPP-riboswitches after bounding to Hypoxanthine and Thiamine respectively. The sequence of the arc plot is the TPP-riboswitch RNA. The arc above the sequence represents the structure of the TPP-riboswitch bound to Thiamine and the bottom arc depicts TPP-riboswitch RNA structural changes binding to Hypoxanthine. The two stem-loop diagrams on the right correspond to the upper and lower arcs respectively. Stem-loop annotation of TPP-riboswitch from bpRNA-1m database (bpRNA ID: bpRNA_PDB_589 and bpRNA_PDB_590), and also corresponding PDB ID: 4NYD, 4NYG.
 
 
 ## Fig. 3: Visual exploration for sequence recombination signal (R code)
@@ -542,10 +544,10 @@ plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649', smooth = FALSE) +
 
 plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
 ```
-**Fig. 3**| The nucleotide different plots were generated using the comparison of KP827649 sequence (Tomato Spotted Wilt Virus large RNA genomic segment) with that of (A) HM581979 sequence (Major parent) and (B) KC261971 sequence (Minor parent). (C) The similarity curves investigates the sequence similarity between KP827649 sequence and potential parents. Two recombination signals (The intersection of two curves in similarity plot, start breakpoint is 4534 and the end breakpoint is 5536) were detected in the TSWV LRNA genomic segment. 
+**Fig. 3**| **Visual exploration for sequence recombination signal**. The nucleotide different plots were generated using the comparison of the KP827649 sequence (Tomato Spotted Wilt Virus large RNA genomic segment) with that of (A) HM581979 sequence (Major parent) and (B) KC261971 sequence (Minor parent). (C) The similarity curves investigate the sequence similarity between the KP827649 sequence and potential parents. Two recombination signals (The intersection of two curves in a similarity plot, the start breakpoint is 4534 and the end breakpoint is 5536) were detected in the TSWV LRNA genomic segment. 
 
 
-## Fig. 4A: Examples of graphics combination (R code)
+## Fig. 4A: An example of graphics combination (R code)
 
 ```{r  fig.height = 4, fig.width = 15, warning=FALSE}
 ##Fig 6A tree + msa + genes locus
@@ -585,10 +587,10 @@ p4a <- p_tp53  + xlim_tree(4) +
 p4A <- facet_widths(p4a, c(Tree = 0.35, Genome_Locus = 0.3))
 p4A
 ```
-**Fig. 4A**| The MSA-tree panel in conjunction with external genome locus data set. Comparative genome locus structure (genome_Locus panel), sequence alignment of TP53 protein (the middle panel), and the corresponding phylogenetic tree (Tree panel) among six species. The local genome map shows the 30000 sites around the TP53 gene, and the phylogenetic tree that represents evolutionary relationships inferred from TP53 protein sequences using the Neighbor-Joining method based on the evolutionary distances of JTT matrix-based method.
+**Fig. 4A**| **An example of graphics combination**. The MSA-tree panel in conjunction with the external genome locus data set. Comparative genome locus structure (genome_Locus panel), sequence alignment of TP53 protein (the middle panel), and the corresponding phylogenetic tree (Tree panel) among six species. The local genome map shows the 30000 sites around the TP53 gene, and the phylogenetic tree that represents evolutionary relationships inferred from TP53 protein sequences using the Neighbor-Joining method based on the evolutionary distances of the JTT matrix-based method.
 
 
-## Fig. 4B: Examples of graphics combination (R code)
+## Fig. 4B: Another example of graphics combination (R code)
 
 ```{r  fig.height = 13, fig.width = 16, warning=FALSE}
 ##Fig 6B tree + msa + 2boxplot
@@ -615,7 +617,7 @@ Phylo_cols <- RColorBrewer::brewer.pal(8, "Dark2")
 names(Phylo_cols) <- names(Phylo_group)
 
 ## plot tree
-p_btuR_tree <- ggtree(btuR_tree) + geom_tiplab(align = T)
+p_btuR_tree <- ggtree(btuR_tree) + geom_tiplab(align = TRUE)
 p_btuR_tree <- groupOTU(p_btuR_tree ,Phylo_group)+aes(color=group)  +
   scale_color_manual(values = c(Phylo_cols, "black"), na.value = "black", name = "Lineage",
                      breaks = c("A", "B1", "B2", "C", "D", "E", "F", "Shigella"),  guide="none")
@@ -657,7 +659,7 @@ p4B <- p_btuR_tree  +
              font = NULL,
              color = "Chemistry_NT",
              border = NA,
-             consensus_views = T, 
+             consensus_views = TRUE, 
              ref = "L38",
              pwidth = 3.5,
              offset = 0.3,
@@ -703,7 +705,7 @@ p4B <- p_btuR_tree  +
 
 p4B
 ```
-**Fig. 4B**| The summarized visualization for different E.coli lineages. The alignment of btuR gene was selected to generate a phylogenetic tree which was stained according to the corresponding lineages. The boxplots represent antimicrobial resistance (AMR) and virulence profiles of the lineages. Number of antimicrobial classes and virulence genes per isolate colored by multidrug-resistant (MDR) classes and the most prevalent predicted pathotype in the lineage.
+**Fig. 4B**| **Another example of graphics combination**. The summarized visualization for different E.coli lineages. The alignment of the btuR gene was selected to generate a phylogenetic tree which was stained according to the corresponding lineages. The boxplots represent antimicrobial resistance (AMR) and virulence profiles of the lineages. A number of antimicrobial classes and virulence genes per isolate are colored by multidrug-resistant (MDR) classes and the most prevalent predicted pathotype in the lineage.
 
 ## Fig. 5: Visualization of genome alignment in MAF format (R code)
 ```{r  fig.height=11, fig.width=12, warning=FALSE, message=FALSE}
@@ -719,7 +721,7 @@ ggmaf(data = tidy_df,
       facet_field = 5,
       facet_heights = c(0.4,0.6))
 ```
-**Fig. 5**| Visualization of the first 10 blocks of different species genomes aligning to  human hg38.chr1. The 10 blocks are divided into two facets: block 1-block 5 is in the first facet, and block 6-block 10 is in the second facet. In each facet, the upper panel shows the original genome coordinates and the lower panel shows genome alignments, with colors indicating positive and negative strands. In the genome alignments panel, the first genome with black border represents the reference genome hg38.chr1 and subsequences in each blocks does not show border color. In each block, the first sequence is the reference genome fragment, followed by other species fragments. Fragments in each block can correspond to labels B1-B10 on the original genome coordinates panel.
+**Fig. 5**| **Visualization of genome alignment in MAF format**. Visualization of the first 10 blocks of different species genomes aligning to  human hg38.chr1. The 10 blocks are divided into two facets: block 1-block 5 is in the first facet, and block 6-block 10 is in the second facet. In each facet, the upper panel shows the original genome coordinates and the lower panel shows genome alignments, with colors indicating positive and negative strands. In the genome alignments panel, the first genome with black border represents the reference genome hg38.chr1 and subsequences in each blocks does not show border color. In each block, the first sequence is the reference genome fragment, followed by other species fragments. Fragments in each block can correspond to labels B1-B10 on the original genome coordinates panel.
 
  Here is the output of sessionInfo() on the system on which this document was compiled:
 ```{r echo = FALSE}
