@@ -57,11 +57,14 @@ p2B <- ggmsa(protein_sequences, 221, 280, seq_name = TRUE, char_width = 0.5,bord
   geom_seqlogo(color = "Chemistry_AA") +
   geom_msaBar()
 
-##Fig.2C double Arc##
+##Fig.2C MSA + Arc##
+p_RF03120_SS <- image_read_svg("data/RF03120_SS.svg")
+q_RF03120_SS <- as.ggplot(p_RF03120_SS)
+
 RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
 RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
 RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
-p2C <- ggmsa(RF03120_msa,
+p2c <- ggmsa(RF03120_msa,
              font = NULL,
              color = "Chemistry_NT",
              seq_name = F,
@@ -69,8 +72,14 @@ p2C <- ggmsa(RF03120_msa,
              border = NA) +
   geom_helix(helix_data = RF_arc) +
   theme(axis.text.y = element_blank())
-
-##Fig.2C Arc + MSA##
+require(patchwork)
+p2C <- p2c + inset_element(q_RF03120_SS, 
+                           left = 0, 
+                           bottom = 0.6,
+                           right = 0.4, 
+                           top = 1, 
+                           align_to = 'full') 
+##Fig.2D 2Arc##
 tpp_seq <- "data/tpp_riboswitch.fasta"
 arc_4NYG <- "data/riboswitch_thiamine.txt"
 arc_4NYD <- "data/riboswitch_hypoxanthine.txt"
