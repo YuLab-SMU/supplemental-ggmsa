@@ -132,9 +132,26 @@ ggsave("Fig3.png", plot = p3, width = 10, height = 14)
 
 
 ################################################################################
-##Fig 4 graphics combination##
+##Fig 4 MAF plot
+maf <- "data/chr1_KI270707v1_random.txt.maf"
+ref = "hg38.chr1_KI270707v1_random"
+seq_df <- read_maf(maf)
+tidy_df <- tidy_maf_df(seq_df, ref = ref)
 
-##Fig 4 tree + msa + genes locus
+p4 <- ggmaf(data = tidy_df, 
+            ref = ref, 
+            block_start = 1, 
+            block_end = 10, 
+            facet_field = 5,
+            facet_heights = c(0.45,0.55))
+
+ggsave("Fig4.png",p5, width = 12, height = 10)
+ggsave("Fig4.pdf",p5, width = 12, height = 10)
+################################################################################
+
+##Fig 5 graphics combination##
+
+##Fig 5 tree + msa + genes locus
 dat <- read.aa(tp53_sequences, format = "fasta") %>% phyDat(type = "AA", levels = NULL)
 tree <- dist.ml(dat, model = "JTT") %>% bionj()
 dd <- ggimage::phylopic_uid(tree$tip.label)
@@ -155,7 +172,7 @@ mapping = aes(xmin = start, xmax = end, fill = gene, forward = direction)
 my_pal <- colorRampPalette(rev(brewer.pal(n = 10, name = "Set3")))
 
 #tree + gene maps + msa
-p4a <- p_tp53  + xlim_tree(4) +
+p5a <- p_tp53  + xlim_tree(4) +
   geom_facet(geom = geom_msa, data = data_53,
              panel = 'Multiple Sequence Alignment of the TP53 Protein', font = NULL,
              border = NA) +
@@ -170,12 +187,12 @@ p4a <- p_tp53  + xlim_tree(4) +
         strip.text = element_text(size = 13))
 
 
-p4A <- facet_widths(p4a, c(Tree = 0.35, Genome_Locus = 0.3))
+p5A <- facet_widths(p5a, c(Tree = 0.35, Genome_Locus = 0.3))
 
 # ggsave("Fig4A.pdf", width = 13, height = 4)
 # ggsave("Fig4A.png", width = 13, height = 4)
 
-##Fig 4B tree + msa + 2boxplot
+##Fig 5B tree + msa + 2boxplot
 seq <-readDNAStringSet("data//btuR.fa")
 aln <- tidy_msa(seq)
 btuR_tree <- read.tree("data/btuR.nwk")
@@ -233,7 +250,7 @@ p_btuR_tree <- p_btuR_tree +
              label="E",offset =.01,  offset.text = 0.0015)
 
 ##tree + meta data boxplots
-p4B <- p_btuR_tree  +
+p5B <- p_btuR_tree  +
   geom_treescale(x = 0,y = -1) +
   geom_fruit(data = aln,
              geom = geom_msa,
@@ -286,28 +303,11 @@ p4B <- p_btuR_tree  +
   scale_fill_manual(values = Pathotype_cols)
 
 
-p4 <- plot_list(gglist = list(p4A, p4B), ncol = 1, heights = c(0.3,0.7), tag_levels = 'A') 
+p5 <- plot_list(gglist = list(p5A, p5B), ncol = 1, heights = c(0.3,0.7), tag_levels = 'A') 
 
-ggsave("Fig4.png",p4, width = 18, height = 13)
-ggsave("Fig4.pdf",p4, width = 18, height = 13)
+ggsave("Fig5.png",p5, width = 18, height = 13)
+ggsave("Fig5.pdf",p5, width = 18, height = 13)
 
-
-################################################################################
-##Fig 5 MAF plot
-maf <- "data/chr1_KI270707v1_random.txt.maf"
-ref = "hg38.chr1_KI270707v1_random"
-seq_df <- read_maf(maf)
-tidy_df <- tidy_maf_df(seq_df, ref = ref)
-
-p5 <- ggmaf(data = tidy_df, 
-      ref = ref, 
-      block_start = 1, 
-      block_end = 10, 
-      facet_field = 5,
-      facet_heights = c(0.45,0.55))
-
-ggsave("Fig5.png",p5, width = 12, height = 10)
-ggsave("Fig5.pdf",p5, width = 12, height = 10)
 
 
 
