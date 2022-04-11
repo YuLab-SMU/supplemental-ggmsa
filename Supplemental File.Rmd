@@ -480,18 +480,24 @@ plot_list(gglist = list(p2a, p2b), ncol = 1, heights = c(0.3,1))
 ```{r  fig.height = 11, fig.width = 10, warning=FALSE}
 RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
 RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
-
 RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
-
-p2C <- ggmsa(RF03120_msa, 
-             font = NULL, 
-             color = "Chemistry_NT", 
-             seq_name = F, 
-             show.legend = F, 
+p2c <- ggmsa(RF03120_msa,
+             font = NULL,
+             color = "Chemistry_NT",
+             seq_name = F,
+             show.legend = F,
              border = NA) +
-        geom_helix(helix_data = RF_arc) + 
-        theme(axis.text.y = element_blank())
-
+    geom_helix(helix_data = RF_arc) +
+    theme(axis.text.y = element_blank())
+require(patchwork)
+p_RF03120_SS <- image_read_svg("data/RF03120_SS.svg")
+q_RF03120_SS <- as.ggplot(p_RF03120_SS)
+p2C <- p2c + inset_element(q_RF03120_SS, 
+                           left = 0, 
+                           bottom = 0.6,
+                           right = 0.4, 
+                           top = 1, 
+                           align_to = 'full') 
 p2C
 ```
 **Fig. 2C**| The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. Compensatory mutations in MSA can be detected by checking alignment columns in positions corresponding to arcs. 

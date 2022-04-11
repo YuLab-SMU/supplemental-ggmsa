@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021/W32TeX) (preloaded format=xelatex 2021.12.31)  10 APR 2022 23:56
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021/W32TeX) (preloaded format=xelatex 2021.12.31)  11 APR 2022 12:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -956,7 +956,7 @@ File: Supplemental-File_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (t
 File: Supplemental-File_files/figure-latex/unnamed-chunk-6-1.pdf Graphic file (type pdf)
 <use Supplemental-File_files/figure-latex/unnamed-chunk-6-1.pdf>
 
-Underfull \hbox (badness 10000) in paragraph at lines 828--840
+Underfull \hbox (badness 10000) in paragraph at lines 834--846
 [][]
  []
 
@@ -967,27 +967,27 @@ File: Supplemental-File_files/figure-latex/unnamed-chunk-7-1.pdf Graphic file (t
 File: Supplemental-File_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type pdf)
 <use Supplemental-File_files/figure-latex/unnamed-chunk-8-1.pdf>
 
-Underfull \hbox (badness 10000) in paragraph at lines 913--923
+Underfull \hbox (badness 10000) in paragraph at lines 919--929
 [][]
  []
 
 [19]
-Overfull \vbox (0.13084pt too high) detected at line 1042
+Overfull \vbox (0.13084pt too high) detected at line 1048
  []
 
 [20]
-Underfull \vbox (badness 10000) detected at line 1042
+Underfull \vbox (badness 10000) detected at line 1048
  []
 
 
-Underfull \vbox (badness 10000) detected at line 1042
+Underfull \vbox (badness 10000) detected at line 1048
  []
 
 [21]
 File: Supplemental-File_files/figure-latex/unnamed-chunk-9-1.pdf Graphic file (type pdf)
 <use Supplemental-File_files/figure-latex/unnamed-chunk-9-1.pdf>
 
-Underfull \hbox (badness 10000) in paragraph at lines 1044--1052
+Underfull \hbox (badness 10000) in paragraph at lines 1050--1058
 [][]
  []
 
@@ -999,15 +999,15 @@ File: Supplemental-File_files/figure-latex/unnamed-chunk-10-1.pdf Graphic file (
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
 Package rerunfilecheck Info: File `Supplemental-File.out' has not changed.
-(rerunfilecheck)             Checksum: 0A3605214ED44F2089DFF7A53A28C0B2;8308.
+(rerunfilecheck)             Checksum: 9ECC0229222B8E9D02FA45ED7D2F542B;8255.
  ) 
 Here is how much of TeX's memory you used:
  18490 strings out of 478256
- 350310 string characters out of 5853795
- 814654 words of memory out of 5000000
+ 350300 string characters out of 5853795
+ 814511 words of memory out of 5000000
  38748 multiletter control sequences out of 15000+600000
  405928 words of font info for 60 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 86i,20n,121p,1142b,573s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 86i,20n,121p,1161b,573s stack positions out of 5000i,500n,10000p,200000b,80000s
 
 Output written on Supplemental-File.pdf (26 pages).
