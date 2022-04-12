@@ -211,7 +211,7 @@ ggmsa(miRNA_sequences, char_width = 0.5, seq_name = TRUE, none_bg = TRUE) +
 
 ## Fig. \ref{fig:ancestral_sequences}: Displaying ancestral sequences in Tree-MSA plot
 
-```{r ancestral_sequences, fig.height = 6, fig.width = 12, warning = FALSE,message=FALSE, fig.cap="\\label{fig:ancestral_sequences}**Displaying ancestral sequences in tree-MSA plot**. There are two display modes: (A) only display the sequence corresponding to the selected ancestral node; (B) display all ancestral sequences of the subtree."}
+```{r ancestral_sequences, fig.height = 10, fig.width = 12, warning = FALSE,message=FALSE, fig.cap="\\label{fig:ancestral_sequences}**Displaying ancestral sequences in tree-MSA plot**. Different display modes of treeMSA_plot(): (A) Only displaying the sequence corresponding to the selected ancestral node; (B) Displaying all ancestral sequences of the subtree. (C) Displaying corresponding ancestor sequences of multiple selected internal nodes."}
 x <- read.phyloxml("data/msa_phyloxml.xml")
 p <- ggtree(x, size = 2) + xlim_tree(0.12)
 tidymsa <- extract_seq(p)
@@ -220,18 +220,28 @@ p1 <- treeMSA_plot(p,
                    tidymsa, 
                    ancestral_node = 11, 
                    sub = FALSE, 
-                   color = "Chemistry_NT")
+                   color = "Chemistry_NT",
+                   seq_colname = "mol_seq")
 
 p2 <- treeMSA_plot(p, 
                    tidymsa, 
                    ancestral_node = 11, 
                    sub = TRUE, 
-                   color = "Chemistry_NT")
+                   color = "Chemistry_NT",
+                   seq_colname = "mol_seq")
 
-pp <- plot_list(gglist = list(p1,p2),
-                nrow = 2,
+p3 <- treeMSA_plot(p, 
+                   tidymsa, 
+                   ancestral_node = c(11,14,16,17), 
+                   sub = FALSE, 
+                   color = "Chemistry_NT",
+                   seq_colname = "mol_seq")
+
+
+pp <- plot_list(gglist = list(p1,p2,p3),
+                ncol = 1,
                 tag_levels = "A",
-                heights = c(0.4,0.6))
+                heights = c(0.4,0.7,0.6))
 pp
 ```
 
@@ -285,6 +295,8 @@ p <- ggplot() +
 p
 ```
 
+\newpage
+
 ## Fig. \ref{fig:pp_all}: Arc diagram of ACE2-RBD interaction
 
 ```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}**Arc diagram of ACE2-RBD interaction**. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J."}
@@ -311,6 +323,8 @@ p_interactive <- ggplot() +
     geom_helix(helix_data = list(known = h1, predicted = h2))
 p_interactive
 ```
+
+\newpage
 
 ## Fig. \ref{fig:simp}: A simplified arc diagram of ACE2-RBD interaction
 
