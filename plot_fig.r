@@ -57,14 +57,22 @@ p2B <- ggmsa(protein_sequences, 221, 280, seq_name = TRUE, char_width = 0.5,bord
   geom_seqlogo(color = "Chemistry_AA") +
   geom_msaBar()
 
-##Fig.2C MSA + Arc##
+pp <- plot_list(gglist = list(p2A, p2A2,p2B), ncol = 1, 
+                heights = c(0.3, 1, 0.5),
+                labels = c("A", " ", " B", "C"))
+
+ggsave("Fig2.pdf", plot = pp, width = 12, height = 10)
+ggsave("Fig2.png", plot = pp, width = 12, height = 10)
+#ggsave("Fig2.tiff", plot = pp , width = 8, height = 10,dpi = 300)
+################################################################################
+##Fig.3A MSA + Arc##
 p_RF03120_SS <- image_read_svg("data/RF03120_SS.svg")
 q_RF03120_SS <- as.ggplot(p_RF03120_SS)
 
 RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
 RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
 RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
-p2c <- ggmsa(RF03120_msa,
+p3a <- ggmsa(RF03120_msa,
              font = NULL,
              color = "Chemistry_NT",
              seq_name = F,
@@ -73,49 +81,131 @@ p2c <- ggmsa(RF03120_msa,
   geom_helix(helix_data = RF_arc) +
   theme(axis.text.y = element_blank())
 require(patchwork)
-p2C <- p2c + inset_element(q_RF03120_SS, 
-                           left = 0, 
-                           bottom = 0.6,
-                           right = 0.4, 
-                           top = 1, 
-                           align_to = 'full') 
-##Fig.2D 2Arc##
+layout <- c(
+  area(t = 0, b = 4, l = 1, r = 4),
+  area(t = 0, b = 2, l = 1, r = 2))
+
+p3A <- p3a + q_RF03120_SS + plot_layout(design = layout)
+p3A
+##Fig.3B 2Arc##
+
+color_589 = c(rep("#67a9cf",5),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#008837",1),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#fc8d59",10),
+              rep("#67a9cf",3),
+              rep("#fed976",2),
+              rep("#fc8d59",3),
+              rep("#67a9cf",1),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",2),
+              rep("#67a9cf",5),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fc8d59",6),
+              rep("#67a9cf",4),
+              rep("#008837",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",1),
+              rep("#67a9cf",4),
+              rep("#fed976",2),
+              rep("#67a9cf",5),
+              rep("#969696",1))
+
+color_590 = c(rep("#67a9cf",5),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#008837",1),
+              rep("#fed976",2),
+              rep("#67a9cf",2),
+              rep("#fc8d59",12),
+              rep("#67a9cf",2),
+              rep("#fed976",2),
+              rep("#fc8d59",3),
+              rep("#67a9cf",1),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",2),
+              rep("#67a9cf",4),
+              rep("#008837",6),
+              rep("#67a9cf",1),
+              rep("#fc8d59",7),
+              rep("#67a9cf",1),
+              rep("#008837",5),
+              rep("#67a9cf",4),
+              rep("#fed976",2),
+              rep("#67a9cf",5),
+              rep("#969696",1))
+
+col <- data.frame(name = c(rep("TPP_Riboswitch_590", time = 83),
+                           rep("TPP_Riboswitch_589", time = 83)),
+                  position = rep(1:83,time=2), 
+                  pos_color = c(color_590,color_589))
+
+
 tpp_seq <- "data/tpp_riboswitch.fasta"
 arc_4NYG <- "data/riboswitch_thiamine.txt"
 arc_4NYD <- "data/riboswitch_hypoxanthine.txt"
 thiamine <- readSSfile(arc_4NYG, type = "Vienna" )
 hypoxanthine <- readSSfile(arc_4NYD, type = "Vienna")
-p_double_arc <- ggmsa(tpp_seq, 
-                      color = "Chemistry_NT", 
-                      seq_name = F, 
-                      show.legend = F, 
-                      border = NA) +
-  geom_helix(helix_data = list(known = hypoxanthine, 
-                               predicted = thiamine)) + 
+
+tidy_tpp <- tidy_msa(tpp_seq)
+tidy_tpp <- merge(tidy_tpp, col, by = c("name","position"))
+
+p_double_arc <- ggplot() + 
+  geom_msa(data = tidy_tpp,
+           position_color = TRUE,
+           seq_name = TRUE,
+           border = NA,
+           show.legend = F) +
+  theme_msa() +
+  geom_helix(helix_data = list(known = hypoxanthine,
+                               predicted = thiamine),
+             color_by = "#67a9cf") +
   theme(axis.text.y = element_blank())
+
 p_loop1 <- image_read_pdf(path = "data/bpRNA_PDB_590_ColorCodedStructures_4NYG.pdf",
                           density = 300)
 p_loop2 <- image_read_pdf(path = "data/bpRNA_PDB_589_ColorCodedStructures_4NYD.pdf",
                           density = 300)
 q1 <- as.ggplot(p_loop1)
 q2 <- as.ggplot(p_loop2)
-p_loop <- plot_list(gglist = list(q1, q2), ncol = 1, labels = c("D"," "))
-p2D <- plot_list(gglist = list(p_loop, p_double_arc), ncol = 2)
 
-#merge C&D
-p2CD <- plot_list(gglist = list(p2C, p2D), 
-                  ncol = 2,
-                  widths = c(0.6,0.4))
+p3B <- (q1/q2) | p_double_arc
 
-##plot all##
-pp <- plot_list(gglist = list(p2A, p2A2,p2B, p2CD), ncol = 1, 
-                heights = c(0.3, 1, 0.6, 0.8),
-                labels = c("A", " ", " B", "C"))
+p3 <- plot_list(gglist = list(p3A,p3B), ncol = 1, heights = c(0.6,0.4))
 
-ggsave("Fig2.pdf", plot = pp, width = 12, height = 11)
-ggsave("Fig2.png", plot = pp, width = 12, height = 11)
+ggsave("Fig3.png", plot = p3 , width = 8, height = 10, dpi = 300)
+ggsave("Fig3.pdf", plot = p3 , width = 8, height = 10, dpi = 300)
+ggsave("Fig3.tiff", plot = p3 , width = 8, height = 10, dpi = 300)
 
+# p_loop <- plot_list(gglist = list(q1, q2), ncol = 1, labels = c("D"," "))
+# p2D <- plot_list(gglist = list(p_loop, p_double_arc), ncol = 2)
 
+# #merge C&D
+# p2CD <- plot_list(gglist = list(p2C, p2D), 
+#                   ncol = 2,
+#                   widths = c(0.6,0.4))
+# 
+# ##plot all##
+# pp <- plot_list(gglist = list(p2A, p2A2,p2B, p2CD), ncol = 1, 
+#                 heights = c(0.3, 1, 0.6, 0.8),
+#                 labels = c("A", " ", " B", "C"))
+# 
+# ggsave("Fig2.pdf", plot = pp, width = 12, height = 11)
+# ggsave("Fig2.png", plot = pp, width = 12, height = 11)
 
 ################################################################################
 ##Fig 3 sequence recombination##

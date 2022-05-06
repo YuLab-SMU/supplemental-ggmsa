@@ -297,9 +297,9 @@ p
 
 \newpage
 
-## Fig. \ref{fig:pp_all}: Arc diagram of ACE2-RBD interaction
+## Fig. \ref{fig:pp_all}: simplified and global arc diagram of ACE2-RBD interaction
 
-```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}**Arc diagram of ACE2-RBD interaction**. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J."}
+```{r pp_all, fig.height=8, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}**Arc diagram of ACE2-RBD interaction**. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD.The main arc plot only shows the residues at the interaction sites, and the global arc diagram is shown in the upper right corner. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J."}
 #read sequences
 x <- readAAStringSet("data/ACE2.fasta")
 y <- readAAStringSet("data/Spike_RBD.fasta")
@@ -321,14 +321,7 @@ p_interactive <- ggplot() +
     geom_msa(data = t_merge,border = NA, font = NULL, seq_name = FALSE) + 
     theme_msa() + theme(axis.text = element_blank()) + 
     geom_helix(helix_data = list(known = h1, predicted = h2))
-p_interactive
-```
 
-\newpage
-
-## Fig. \ref{fig:simp}: A simplified arc diagram of ACE2-RBD interaction
-
-```{r simp, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:simp}**A simplified version of the ACE2-RBD interaction arc plot**. The arc plot only shows the residues at the interaction sites."}
 #simplified p-p interactive  plot
 ACE2 <- t_merge[t_merge$position %in% c(h1$i,h2$i),]
 spike <- t_merge[t_merge$position %in% c(h1$j,h2$j),]
@@ -370,8 +363,60 @@ p_sim <- ggplot() +
                   label = c("6m0j:A(ACE2)", 
                             "7wpb:D(ACE2)")),
               size = 3.5)  + xlim(-2,29) 
-p_sim 
+
+require(patchwork)
+p_sim + inset_element(p_interactive, 0.7, 0.7, 1.1, 1.1) 
+
 ```
+
+
+
+<!-- ## Fig. \ref{fig:simp}: A simplified arc diagram of ACE2-RBD interaction -->
+
+<!-- ```{r simp, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:simp}**A simplified version of the ACE2-RBD interaction arc plot**. The arc plot only shows the residues at the interaction sites."} -->
+<!-- #simplified p-p interactive  plot -->
+<!-- ACE2 <- t_merge[t_merge$position %in% c(h1$i,h2$i),] -->
+<!-- spike <- t_merge[t_merge$position %in% c(h1$j,h2$j),] -->
+<!-- t1_reset <- reset_pos(ACE2) -->
+<!-- t2_reset <- reset_pos(spike) -->
+<!-- simplify_merge <- merge_seq(previous_seq = t1_reset, -->
+<!--                             subsequent_seq = t2_reset, -->
+<!--                             gap = 5,  -->
+<!--                             adjust_name = FALSE) -->
+
+<!-- sim_h1 <- simplify_hdata(hdata = h1, sim_msa = simplify_merge) -->
+<!-- sim_h2 <- simplify_hdata(hdata = h2, sim_msa = simplify_merge) -->
+
+<!-- ##break and label -->
+<!-- b <- simplify_merge[simplify_merge$character != "-", "position"] %>% unique() -->
+<!-- l <-  c(inter1$Res.no.1,inter1$Res.no..2,  -->
+<!--         inter2$Res.no.1,inter2$Res.no..2) %>% unique -->
+
+<!-- p_sim <- ggplot() +  -->
+<!--     geom_msa(data = simplify_merge,border = NA, char_width = 0.5, seq_name = FALSE) +  -->
+<!--     ggmsa:::theme_msa() +  -->
+<!--     geom_helix(helix_data = list(known = sim_h1,  -->
+<!--                                  predicted = sim_h2),  -->
+<!--                overlap = FALSE) +  -->
+<!--     geom_text(mapping = aes(x = b,  -->
+<!--                             y = 0.25,  -->
+<!--                             label = l[order(l)]),  -->
+<!--               size = 3) + -->
+<!--     theme(axis.text.x = element_blank(), -->
+<!--           axis.text.y = element_blank()) +  -->
+<!--     scale_y_discrete(labels = c("6m0j:A(ACE2)", "7wpb:D(ACE2)")) +  -->
+<!--     geom_text(aes(x = c(27.2,27.2),  -->
+<!--                   y = c(1,2),  -->
+<!--                   label = c("6m0j:A(Spike_RBD)",  -->
+<!--                             "7wpb:D(Spike_RBD)")), -->
+<!--               size = 3.5) + -->
+<!--     geom_text(aes(x = c(-1.5,-1.5),  -->
+<!--                   y = c(1,2),  -->
+<!--                   label = c("6m0j:A(ACE2)",  -->
+<!--                             "7wpb:D(ACE2)")), -->
+<!--               size = 3.5)  + xlim(-2,29)  -->
+<!-- p_sim  -->
+<!-- ``` -->
 
 \newpage
 
@@ -491,38 +536,103 @@ plot_list(gglist = list(p2a, p2b), ncol = 1, heights = c(0.3,1))
 
 \newpage
 
-## Fig. 2C: Visual methods of surveying RNA co-variation (R code)
+## Fig. 3A: Visual methods of surveying RNA co-variation (R code)
 
 ```{r  fig.height = 11, fig.width = 10, warning=FALSE}
+p_RF03120_SS <- image_read_svg("data/RF03120_SS.svg")
+q_RF03120_SS <- as.ggplot(p_RF03120_SS)
+
 RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
 RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
 RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
-p2c <- ggmsa(RF03120_msa,
+p3a <- ggmsa(RF03120_msa,
              font = NULL,
              color = "Chemistry_NT",
-             seq_name = FALSE,
-             show.legend = FALSE,
+             seq_name = F,
+             show.legend = F,
              border = NA) +
-    geom_helix(helix_data = RF_arc) +
-    theme(axis.text.y = element_blank())
+  geom_helix(helix_data = RF_arc) +
+  theme(axis.text.y = element_blank())
 require(patchwork)
-p_RF03120_SS <- image_read_svg("data/RF03120_SS.svg")
-q_RF03120_SS <- as.ggplot(p_RF03120_SS)
-p2C <- p2c + inset_element(q_RF03120_SS, 
-                           left = 0, 
-                           bottom = 0.6,
-                           right = 0.4, 
-                           top = 1, 
-                           align_to = 'full') 
-p2C
+layout <- c(
+  area(t = 0, b = 4, l = 1, r = 4),
+  area(t = 0, b = 2, l = 1, r = 2))
+
+p3A <- p3a + q_RF03120_SS + plot_layout(design = layout)
+p3A
 ```
-**Fig. 2C**| **Visual methods of surveying RNA co-variation**. The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. Compensatory mutations in MSA can be detected by checking alignment columns in positions corresponding to arcs. 
+**Fig. 3A**| **Visual methods of surveying RNA co-variation**. The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. Compensatory mutations in MSA can be detected by checking alignment columns in positions corresponding to arcs. 
 
 \newpage
 
-## Fig. 2D: Visual RNA structural changes (R code)
+## Fig. 3B: Visual RNA structural changes (R code)
 
 ```{r  fig.height=4, fig.width=8, warning=FALSE, message=FALSE}
+color_589 = c(rep("#67a9cf",5),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#008837",1),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#fc8d59",10),
+              rep("#67a9cf",3),
+              rep("#fed976",2),
+              rep("#fc8d59",3),
+              rep("#67a9cf",1),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",2),
+              rep("#67a9cf",5),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fc8d59",6),
+              rep("#67a9cf",4),
+              rep("#008837",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",1),
+              rep("#67a9cf",4),
+              rep("#fed976",2),
+              rep("#67a9cf",5),
+              rep("#969696",1))
+
+color_590 = c(rep("#67a9cf",5),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#008837",1),
+              rep("#fed976",2),
+              rep("#67a9cf",2),
+              rep("#fc8d59",12),
+              rep("#67a9cf",2),
+              rep("#fed976",2),
+              rep("#fc8d59",3),
+              rep("#67a9cf",1),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",2),
+              rep("#67a9cf",4),
+              rep("#008837",6),
+              rep("#67a9cf",1),
+              rep("#fc8d59",7),
+              rep("#67a9cf",1),
+              rep("#008837",5),
+              rep("#67a9cf",4),
+              rep("#fed976",2),
+              rep("#67a9cf",5),
+              rep("#969696",1))
+
+col <- data.frame(name = c(rep("TPP_Riboswitch_590", time = 83),
+                           rep("TPP_Riboswitch_589", time = 83)),
+                  position = rep(1:83,time=2), 
+                  pos_color = c(color_590,color_589))
+
 
 tpp_seq <- "data/tpp_riboswitch.fasta"
 arc_4NYG <- "data/riboswitch_thiamine.txt"
@@ -530,31 +640,35 @@ arc_4NYD <- "data/riboswitch_hypoxanthine.txt"
 thiamine <- readSSfile(arc_4NYG, type = "Vienna" )
 hypoxanthine <- readSSfile(arc_4NYD, type = "Vienna")
 
-p <- ggmsa(tpp_seq, 
-           color = "Chemistry_NT", 
-           seq_name = FALSE, 
-           show.legend = FALSE, 
-           border = NA) +
-    geom_helix(helix_data = list(known = hypoxanthine, 
-                                 predicted = thiamine)) + 
-    theme(axis.text.y = element_blank())
+tidy_tpp <- tidy_msa(tpp_seq)
+tidy_tpp <- merge(tidy_tpp, col, by = c("name","position"))
 
-p1 <- image_read_pdf(path = "data/bpRNA_PDB_590_ColorCodedStructures_4NYG.pdf",
-                     density = 300)
-p2 <- image_read_pdf(path = "data/bpRNA_PDB_589_ColorCodedStructures_4NYD.pdf",
-                     density = 300)
+p_double_arc <- ggplot() + 
+  geom_msa(data = tidy_tpp,
+           position_color = TRUE,
+           seq_name = TRUE,
+           border = NA,
+           show.legend = F) +
+  theme_msa() +
+  geom_helix(helix_data = list(known = hypoxanthine,
+                               predicted = thiamine),
+             color_by = "#67a9cf") +
+  theme(axis.text.y = element_blank())
 
-q1 <- as.ggplot(p1)
-q2 <- as.ggplot(p2)
+p_loop1 <- image_read_pdf(path = "data/bpRNA_PDB_590_ColorCodedStructures_4NYG.pdf",
+                          density = 300)
+p_loop2 <- image_read_pdf(path = "data/bpRNA_PDB_589_ColorCodedStructures_4NYD.pdf",
+                          density = 300)
+q1 <- as.ggplot(p_loop1)
+q2 <- as.ggplot(p_loop2)
 
-p_loop <- plot_list(gglist = list(q1, q2), ncol = 1)
-pp <- plot_list(gglist = list(p_loop, p), ncol = 2)
-pp
+p3B <- (q1/q2) | p_double_arc
+p3B
 ```
-**Fig. 2D**| **Exploring RNA structural changes by `geom_helix` annotation**. Stem-loop diagram and arc diagram of secondary structure changes of TPP-riboswitches after bounding to Hypoxanthine and Thiamine respectively. The sequence of the arc plot is the TPP-riboswitch RNA. The arc above the sequence represents the structure of the TPP-riboswitch bound to Thiamine and the bottom arc depicts TPP-riboswitch RNA structural changes binding to Hypoxanthine. The two stem-loop diagrams on the right correspond to the upper and lower arcs respectively. Stem-loop annotation of TPP-riboswitch from bpRNA-1m database (bpRNA ID: bpRNA_PDB_589 and bpRNA_PDB_590), and also corresponding PDB ID: 4NYD, 4NYG.
+**Fig. 3B**| **Exploring RNA structural changes by `geom_helix` annotation**. Stem-loop diagram and arc diagram of secondary structure changes of TPP-riboswitches after bounding to Hypoxanthine and Thiamine respectively. The sequence of the arc plot is the TPP-riboswitch RNA. The arc above the sequence represents the structure of the TPP-riboswitch bound to Thiamine and the bottom arc depicts TPP-riboswitch RNA structural changes binding to Hypoxanthine. The two stem-loop diagrams on the right correspond to the upper and lower arcs respectively. Stem-loop annotation of TPP-riboswitch from bpRNA-1m database (bpRNA ID: bpRNA_PDB_589 and bpRNA_PDB_590), and also corresponding PDB ID: 4NYD, 4NYG.
 
 
-## Fig. 3: Visual exploration for sequence recombination signal (R code)
+## Fig. 4: Visual exploration for sequence recombination signal (R code)
 
 ```{r  fig.height = 11, fig.width = 10, warning=FALSE, message=FALSE}
 fas <- c("data/HM_KP.fa","data/CK_KP.fa")
@@ -565,9 +679,9 @@ plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649', smooth = FALSE) +
 
 plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
 ```
-**Fig. 3**| **Visual exploration for sequence recombination signal**. The nucleotide different plots were generated using the comparison of the KP827649 sequence (Tomato Spotted Wilt Virus large RNA genomic segment) with that of (A) HM581979 sequence (Major parent) and (B) KC261971 sequence (Minor parent). (C) The similarity curves investigate the sequence similarity between the KP827649 sequence and potential parents. Two recombination signals (The intersection of two curves in a similarity plot, the start breakpoint is 4534 and the end breakpoint is 5536) were detected in the TSWV LRNA genomic segment. 
+**Fig. 4**| **Visual exploration for sequence recombination signal**. The nucleotide different plots were generated using the comparison of the KP827649 sequence (Tomato Spotted Wilt Virus large RNA genomic segment) with that of (A) HM581979 sequence (Major parent) and (B) KC261971 sequence (Minor parent). (C) The similarity curves investigate the sequence similarity between the KP827649 sequence and potential parents. Two recombination signals (The intersection of two curves in a similarity plot, the start breakpoint is 4534 and the end breakpoint is 5536) were detected in the TSWV LRNA genomic segment. 
 
-## Fig. 4: Visualization of genome alignment in MAF format (R code)
+## Fig. 5: Visualization of genome alignment in MAF format (R code)
 ```{r  fig.height=11, fig.width=12, warning=FALSE, message=FALSE}
 maf <- "data/chr1_KI270707v1_random.txt.maf"
 ref = "hg38.chr1_KI270707v1_random"
@@ -581,10 +695,10 @@ ggmaf(data = tidy_df,
       facet_field = 5,
       facet_heights = c(0.4,0.6))
 ```
-**Fig. 4**| **Visualization of genome alignment in MAF format**. Visualization of the first 10 blocks of different species genomes aligning to  human hg38.chr1. The 10 blocks are divided into two facets: block 1-block 5 is in the first facet, and block 6-block 10 is in the second facet. In each facet, the upper panel shows the original genome coordinates and the lower panel shows genome alignments, with colors indicating positive and negative strands. In the genome alignments panel, the first genome with black border represents the reference genome hg38.chr1 and subsequences in each blocks does not show border color. In each block, the first sequence is the reference genome fragment, followed by other species fragments. Fragments in each block can correspond to labels B1-B10 on the original genome coordinates panel.
+**Fig. 5**| **Visualization of genome alignment in MAF format**. Visualization of the first 10 blocks of different species genomes aligning to  human hg38.chr1. The 10 blocks are divided into two facets: block 1-block 5 is in the first facet, and block 6-block 10 is in the second facet. In each facet, the upper panel shows the original genome coordinates and the lower panel shows genome alignments, with colors indicating positive and negative strands. In the genome alignments panel, the first genome with black border represents the reference genome hg38.chr1 and subsequences in each blocks does not show border color. In each block, the first sequence is the reference genome fragment, followed by other species fragments. Fragments in each block can correspond to labels B1-B10 on the original genome coordinates panel.
 
 
-## Fig. 5A: An example of graphics combination (R code)
+## Fig. 6A: An example of graphics combination (R code)
 
 ```{r  fig.height = 4, fig.width = 15, warning=FALSE}
 ##Fig 6A tree + msa + genes locus
@@ -608,7 +722,7 @@ mapping = aes(xmin = start, xmax = end, fill = gene, forward = direction)
 my_pal <- colorRampPalette(rev(brewer.pal(n = 10, name = "Set3")))
 
 #tree + gene maps + msa
-p5a <- p_tp53  + xlim_tree(4) +
+p6a <- p_tp53  + xlim_tree(4) +
   geom_facet(geom = geom_msa, data = data_53,
              panel = 'Multiple Sequence Alignment of the TP53 Protein', font = NULL,
              border = NA) +
@@ -621,13 +735,13 @@ p5a <- p_tp53  + xlim_tree(4) +
              arrowhead_width = unit(1, "mm")) +
   theme(strip.background=element_blank(),
         strip.text = element_text(size = 13))
-p5A <- facet_widths(p5a, c(Tree = 0.35, Genome_Locus = 0.3))
-p5A
+p6A <- facet_widths(p6a, c(Tree = 0.35, Genome_Locus = 0.3))
+p6A
 ```
-**Fig. 5A**| **An example of graphics combination**. The MSA-tree panel in conjunction with the external genome locus data set. Comparative genome locus structure (genome_Locus panel), sequence alignment of TP53 protein (the middle panel), and the corresponding phylogenetic tree (Tree panel) among six species. The local genome map shows the 30000 sites around the TP53 gene, and the phylogenetic tree that represents evolutionary relationships inferred from TP53 protein sequences using the Neighbor-Joining method based on the evolutionary distances of the JTT matrix-based method.
+**Fig. 6A**| **An example of graphics combination**. The MSA-tree panel in conjunction with the external genome locus data set. Comparative genome locus structure (genome_Locus panel), sequence alignment of TP53 protein (the middle panel), and the corresponding phylogenetic tree (Tree panel) among six species. The local genome map shows the 30000 sites around the TP53 gene, and the phylogenetic tree that represents evolutionary relationships inferred from TP53 protein sequences using the Neighbor-Joining method based on the evolutionary distances of the JTT matrix-based method.
 
 
-## Fig. 5B: Another example of graphics combination (R code)
+## Fig. 6B: Another example of graphics combination (R code)
 
 ```{r  fig.height = 13, fig.width = 16, warning=FALSE}
 ##Fig 6B tree + msa + 2boxplot
@@ -688,7 +802,7 @@ p_btuR_tree <- p_btuR_tree +
              label="E",offset =.01,  offset.text = 0.0015)
 
 ##tree + meta data boxplots
-p5B <- p_btuR_tree  +
+p6B <- p_btuR_tree  +
   geom_treescale(x = 0,y = -1) +
   geom_fruit(data = aln,
              geom = geom_msa,
@@ -740,9 +854,9 @@ p5B <- p_btuR_tree  +
                                 line.color = "black"))+
   scale_fill_manual(values = Pathotype_cols)
 
-p5B
+p6B
 ```
-**Fig. 5B**| **Another example of graphics combination**. The summarized visualization for different E.coli lineages. The alignment of the btuR gene was selected to generate a phylogenetic tree which was stained according to the corresponding lineages. The boxplots represent antimicrobial resistance (AMR) and virulence profiles of the lineages. A number of antimicrobial classes and virulence genes per isolate are colored by multidrug-resistant (MDR) classes and the most prevalent predicted pathotype in the lineage.
+**Fig. 6B**| **Another example of graphics combination**. The summarized visualization for different E.coli lineages. The alignment of the btuR gene was selected to generate a phylogenetic tree which was stained according to the corresponding lineages. The boxplots represent antimicrobial resistance (AMR) and virulence profiles of the lineages. A number of antimicrobial classes and virulence genes per isolate are colored by multidrug-resistant (MDR) classes and the most prevalent predicted pathotype in the lineage.
 
 
 
