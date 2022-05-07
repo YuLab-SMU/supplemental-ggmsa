@@ -1,0 +1,917 @@
+---
+bibliography: Supplemental_file.bib
+biblio-style: apalike
+highlight_bw: yes
+output:
+  rmarkdown::pdf_document:
+    includes:
+        in_header: header.tex 
+    dev: "cairo_pdf"
+    latex_engine: xelatex
+    fig_caption: yes
+---
+
+**Supplemental File of**
+
+# ggmsa: a visual exploration tool for multiple sequence alignment and associated data
+
+\renewcommand{\figurename}{Fig.}
+
+\newcommand{\beginsupplement}{%
+        \setcounter{table}{0}
+        \renewcommand{\thetable}{S\arabic{table}}%
+        \setcounter{figure}{0}
+        \renewcommand{\thefigure}{S\arabic{figure}}%
+     }
+
+\beginsupplement
+
+
+```{r message=FALSE, warning=FALSE, echo = FALSE}
+library(knitr)
+knit_hooks$set(crop = hook_pdfcrop)
+opts_chunk$set(crop = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(ggmsa)
+library(ggplot2)
+library(ggtree)
+library(gggenes)
+library(ape)
+library(Biostrings)
+library(ggnewscale)
+library(dplyr)
+library(ggtreeExtra)
+library(phangorn)
+library(RColorBrewer)
+library(patchwork)
+library(ggplotify)
+library(aplot)
+library(magick)
+library(treeio)
+
+
+protein_sequences <- system.file("extdata", "sample.fasta", package = "ggmsa")
+nt_sequence <- system.file("extdata", "LeaderRepeat_All.fa", package = "ggmsa")
+miRNA_sequences <- system.file("extdata", "seedSample.fa", package = "ggmsa")
+tp53_sequences <-  system.file("extdata", "tp53.fa", package = "ggmsa")
+tp53_genes <- system.file("extdata", "TP53_genes.xlsx", package = "ggmsa")
+```
+
+
+\newpage
+
+## Fig. \ref{fig:color_scheme}: Amino acid and nucleotide color schemes in ggmsa
+```{r color_scheme, echo=FALSE, fig.height=5, fig.width=5, fig.cap="\\label{fig:color_scheme} **Color schemes in ggmsa.** (A) Amino acid color schemes. Schemes are either quantitative, reflecting empirical or statistical properties of amino acids; or qualitative, reflecting physicochemical attributes. Chemistry is colored according to side-chain chemistry and is also used in DNASTAR applications [@Burland2000DNASTAR]; Shapely matches the RasMol amino acid color schemes, which are, in turn, based on Robert Fletterick’s Shapely models. Zappo is a qualitative scheme developed by M. Clamp. The residues are colored according to their physicochemical properties; Taylor [@Taylor1997Residual] is taken from Taylor and is also used in JalView [@waterhouse2009jalview]; Hydrophobicity colors the residues in the alignment based on the hydrophobicity table [@kyte1982simple]. B, X, Z, J, O, and U are amino acid ambiguity codes: B is aspartate or asparagine; Z is glutamate or glutamine; X, J, O, U is an unknown (or ‘other’); “-” indicate a gap. (B) Nucleotide color schemes used by ggmsa."}
+
+library(patchwork)
+scheme_AA <- ggmsa:::scheme_AA
+scheme_NT <- ggmsa:::scheme_NT
+
+scheme_AA <- scheme_AA[, - 6]
+scheme_AA$char <- row.names(scheme_AA)
+
+order_char <- c("A","R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M",
+                "F","P", "S", "T", "W", "Y", "V", "B", "X", "Z", "J", "O", "U", "-")
+
+scheme_AA$char <- factor(scheme_AA$char, levels = rev(order_char))
+my_scheme <- tidyr::gather(scheme_AA, key = scheme, value = color, -char)
+
+my_scheme$scheme <- factor(my_scheme$scheme, levels = c("Chemistry_AA","Shapely_AA","Zappo_AA","Taylor_AA","Hydrophobicity" ,"LETTER" ))
+my_scheme[my_scheme$color == "","color"] <- NA
+
+p1_sch <- ggplot(data = my_scheme, aes_(x =~ scheme, y =~ char, fill =~ I(color))) + geom_tile(color = "#f5f5f5", size = 2) +
+    ylab("Amino acid") + xlab(NULL) +
+    scale_x_discrete(position = "top") +
+    theme(axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 0),
+          panel.background = element_blank()) +
+    coord_fixed(ratio = 0.7)
+
+scheme_NT$char <- row.names(scheme_NT)
+order_charNT <- c("A", "C", "G", "T", "U", "-")
+scheme_NT$char <- factor(scheme_NT$char, levels = rev(order_charNT))
+my_schemeNT <- tidyr::gather(scheme_NT, key = scheme, value = color, -char)
+
+#########################NT colors##################
+p2_sch <- ggplot(data = my_schemeNT, aes_(x =~ scheme, y =~ char, fill =~ I(color))) + geom_tile(color = "#f5f5f5", size = 2) +
+  ylab("Nucleotide") + xlab(NULL) +
+  scale_x_discrete(position = "top") +
+  theme(axis.ticks = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 0),
+        panel.background = element_blank()) +
+  coord_fixed(ratio = c(1.5))
+
+
+(p1_sch | (p2_sch / plot_spacer()))+ plot_annotation(tag_levels = 'A')
+```
+
+\newpage
+
+
+## Fig. \ref{fig:facet}: MSA view with break down layout
+
+`facet_msa()` module allows for showing more alignment data in a restricted canvas. The long sequence is broken down and displayed in several lines.
+```{r facet, fig.height = 6, fig.width = 10, message=FALSE, warning=FALSE, fig.cap="\\label{fig:facet} **MSA view with break down layout**. The long sequence is displayed in several lines."}
+ # 4 fields
+ ggmsa(protein_sequences, start = 0, end = 400, font = NULL, color = "Chemistry_AA") + 
+    facet_msa(field = 100)
+```
+
+
+## Fig. \ref{fig:treeExtra}: MSA view with circular layout tree
+
+With ggtreeExtra [@xu2021ggtreeextra], displaying alignment in a circular layout can also be supported. The `geom_fruit()` will automatically align the MSA graphs to the tree with a circular layout.
+
+```{r treeExtra, fig.height=3, fig.width =3, message = FALSE, warning= FALSE, fig.cap="\\label{fig:treeExtra}**Example of MSA view with circular layout phylogenetic tree**."}
+library(ggtree)
+library(ggtreeExtra)
+sequences <- system.file("extdata", "sequence-link-tree.fasta", package = "ggmsa")
+
+x <- readAAStringSet(sequences)
+d <- as.dist(stringDist(x, method = "hamming")/width(x)[1])
+tree <- bionj(d)
+data <- tidy_msa(x, 120, 200)
+
+p1 <- ggtree(tree, layout = 'circular') + 
+    geom_tiplab(align = TRUE, offset = 0.545, size = 2) + 
+        xlim(NA, 1.3)
+p1 + geom_fruit(data = data, geom = geom_msa, offset = 0, 
+                pwidth = 1.2, font = NULL, border = NA)
+```
+
+
+## Fig. \ref{fig:tree}: Visualizing MSA with a phylogenetic tree
+
+Similar to `geom_fruit()`, the `geom_facet()` provided in ggtree [@yu2017ggtree] also works with ggmsa to display MSA with a phylogenetic tree.
+
+```{r tree, fig.height = 3, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:tree}**A phylogenetic tree with MSA that it was built from**."}
+ x <- readAAStringSet(protein_sequences)
+ d <- as.dist(stringDist(x, method = "hamming")/width(x)[1])
+ library(ape)
+ tree <- bionj(d)
+ library(ggtree)
+ p <- ggtree(tree) + geom_tiplab()
+
+ data = tidy_msa(x)
+ p + geom_facet(geom = geom_msa, data = data,  panel = 'msa',
+                font = NULL, border = NA, color = "Chemistry_AA") +
+     xlim_tree(1)
+```
+
+\newpage
+
+## Fig. \ref{fig:re-order_bundles}: Reassign residue order in sequence bundle
+
+```{r re-order_bundles, fig.height = 4, fig.width = 11, warning = FALSE, fig.cap="\\label{fig:re-order_bundles}**Reassign residue order in sequence bundle**. The preference of residues’ physicochemical properties can be reflected by adjusting the order of the letters on the y-axis. This figure reassigns residue  order with amino acid molecule weight from light (top) to heavy (bottom)."}
+negative <-  system.file("extdata", "Gram-negative_AKL.fasta", 
+                         package = "ggmsa")
+positive <-  system.file("extdata", "Gram-positive_AKL.fasta", 
+                         package = "ggmsa")
+
+ggSeqBundle(list(negative, positive), 
+                 alpha = 0.1, 
+                 bundle_color = c("#FC8D62","#8DA0CB"),
+                 lev_molecule = c("-", "W", "Y", "R", "F", "H", "M", "E", 
+                                  "K", "Q", "D", "N", "L", "I", "C", "T", 
+                                  "V", "P", "S", "A", "G"))
+```
+
+
+\newpage
+
+## Fig. \ref{fig:conse}: MSA with consensus sequence
+
+```{r conse, fig.height = 2, fig.width = 8, warning = FALSE, fig.cap="\\label{fig:conse}**Example of displaying consensus sequence for an MSA**. The consensus sequence is displayed above the alignment and shows which residues are conserved and which residues are variable. A consensus is constructed from the most frequent residue at each site."}
+ggmsa(protein_sequences, 300, 350, char_width = 0.5, 
+      seq_name = TRUE, consensus_views = TRUE, use_dot = TRUE)
+```
+
+
+
+## Fig. \ref{fig:seed1}: Seed region annotation (asterisks) for miRNA sequences 
+
+The `geom_seed()` helps to identify microRNA seed region by adding asterisks or a shaded block. The seed region is a conserved heptameric sequence that is mostly situated at positions 2-7 from the miRNA 5´-end.
+```{r seed1, fig.height = 2, fig.width =6, warning = FALSE, message=FALSE, fig.cap="\\label{fig:seed1}**Example of highlighting miRNA seed region**. Asterisks are used for marking the seed region. "}
+miRNA_sequences <- system.file("extdata", "seedSample.fa", package = "ggmsa")
+ggmsa(miRNA_sequences, char_width = 0.5, color="Chemistry_NT") + 
+    geom_seed(seed = "GAGGUAG", star = TRUE) + coord_cartesian()
+```
+
+\newpage
+
+## Fig. \ref{fig:seed2}: Seed region annotation (shaded block) for miRNA sequences 
+
+```{r seed2, fig.height = 2, fig.width = 6, warning = FALSE,message=FALSE, fig.cap="\\label{fig:seed2}**Example of highlighting miRNA seed region**. Annotation of sequence seed region with a shaded block"}
+ggmsa(miRNA_sequences, char_width = 0.5, seq_name = TRUE, none_bg = TRUE) + 
+    geom_seed(seed = "GAGGUAG") + coord_cartesian()
+```
+
+
+## Fig. \ref{fig:ancestral_sequences}: Displaying ancestral sequences in Tree-MSA plot
+
+```{r ancestral_sequences, fig.height = 10, fig.width = 12, warning = FALSE,message=FALSE, fig.cap="\\label{fig:ancestral_sequences}**Displaying ancestral sequences in tree-MSA plot**. Different display modes of treeMSA_plot(): (A) Only displaying the sequence corresponding to the selected ancestral node; (B) Displaying all ancestral sequences of the subtree. (C) Displaying corresponding ancestor sequences of multiple selected internal nodes."}
+x <- read.phyloxml("data/msa_phyloxml.xml")
+p <- ggtree(x, size = 2) + xlim_tree(0.12)
+tidymsa <- extract_seq(p)
+
+p1 <- treeMSA_plot(p, 
+                   tidymsa, 
+                   ancestral_node = 11, 
+                   sub = FALSE, 
+                   color = "Chemistry_NT",
+                   seq_colname = "mol_seq")
+
+p2 <- treeMSA_plot(p, 
+                   tidymsa, 
+                   ancestral_node = 11, 
+                   sub = TRUE, 
+                   color = "Chemistry_NT",
+                   seq_colname = "mol_seq")
+
+p3 <- treeMSA_plot(p, 
+                   tidymsa, 
+                   ancestral_node = c(11,14,16,17), 
+                   sub = FALSE, 
+                   color = "Chemistry_NT",
+                   seq_colname = "mol_seq")
+
+
+pp <- plot_list(gglist = list(p1,p2,p3),
+                ncol = 1,
+                tag_levels = "A",
+                heights = c(0.4,0.7,0.6))
+pp
+```
+
+\newpage
+<!-- ## Fig. \ref{fig:maf}: Displaying all blocks in the MAF file -->
+
+<!-- ```{r maf, fig.height=45, fig.width=12, warning=FALSE, message=FALSE, fig.cap="\\label{fig:maf}Displaying all blocks in the MAF file"} -->
+<!-- maf <- "data/chr1_KI270707v1_random.txt.maf" -->
+<!-- ref = "hg38.chr1_KI270707v1_random" -->
+<!-- seq_df <- read_maf(maf) -->
+<!-- tidy_df <- tidy_maf_df(seq_df, ref = ref) -->
+
+<!-- ggmaf(data = tidy_df,  -->
+<!--       ref = ref,  -->
+<!--       block_start = 1, -->
+<!--       block_end = 45, -->
+<!--       facet_field = 10, -->
+<!--       facet_heights = c(1,1,1,2.5,1.5)) -->
+<!-- ``` -->
+
+## Fig. \ref{fig:dms}: MSA of SARS-CoV-2 Spike protein RBD coloring by RBD-hACE2 binding affinity
+
+We applied the Deep Mutational Scanning (DMS) data of ACE2-binding affinity to MSA to functionally annotate the mutated sites in the sequence. In addition, the application scope of the arc diagram is extended to the interaction process of ACE2-RBD (Fig. \ref{fig:pp_all}). Through MSA that used ACE2-binding affinity annotation and ACE2-RBD interaction arc diagram, we can observe how the mutation of Omicron affects ACE2-RBD interaction. Although DMS data only reveal the binding affinity of a single amino acid mutation (Fig. \ref{fig:dms}), we believe that an MSA plot annotated with DMS data can reflect changes in ACE2-RBD interactions to a certain extent. Arc plot representing ACE2-RBD interactions prove this (Fig. \ref{fig:pp_all}, \ref{fig:simp}). In the ACE2-RBD arc diagram, Omicron mutation sites K417N, G446S, and G496S show loss of hydrogen bond interaction, and these sites all show decreased binding ability in the binding affinity annotation diagram. The N501Y mutation in the binding affinity diagram shows an increased binding ability, which may form a new binding site. This has not been shown in the Arc plot (possible cause: the interaction site information contained in the 7WPB is not completely accurate) but has been reported in other literature [@yin2022structures]. 
+
+```{r dms, fig.height=5, fig.width=10, warning=FALSE, message=FALSE,fig.cap="\\label{fig:dms}**MSA of SARS-CoV-2 Spike protein RBD**. Mutations in Spike protein Receptor Binding Domain (RBD) are compared with wild-type SARS-CoV-2 and four other strains (Beta, Gamma, Delta, and Omicron, all from GISAID). The colors in MSA show RBD-hACE2 (human Angiotensin-converting enzyme 2) binding affinity scores. ACE2-binding affinity is shown in shades of blue or red representing higher or lower ACE2 affinity, respectively. The ACE2 binding scores are from the Deep Mutational Scanning (DMS) of SARS-CoV-2 RBD. Scores represent binding constants (Δlog10 KD) relative to the wild-type reference amino acid."}
+colRD <- colorRampPalette(rev(brewer.pal(n = 9, name = "OrRd")))
+colBU <- colorRampPalette(colors = rev(c("#185089","#FFF7EC")))
+
+data <- "data/s_RBD.fasta"
+dms <- read.csv("data/DMS.csv")
+del <- c("expr_lib1", "expr_lib2", 
+         "expr_avg","bind_lib1", 
+         "bind_lib2")
+dms <- dms[,!colnames(dms) %in% del]
+
+tidymsa <- tidy_msa(data)
+tidymsa <- assign_dms(tidymsa, dms)
+#Mapping the position to the protein-protein interaction plot
+tidymsa$position <- tidymsa$position + 330 
+
+p <- ggplot() + 
+    geom_msa(data = tidymsa,
+             char_width = 0.5,
+             dms = TRUE, 
+             seq_name = TRUE, 
+             show.legend = TRUE) + 
+    theme_msa() +
+    scale_fill_gradientn(name = "ACE2 binding",
+                         colors = c(colRD(75),colBU(25))) +
+    facet_msa(50) 
+p
+```
+
+\newpage
+
+
+## Fig. \ref{fig:pp_all}: Arc diagram of ACE2-RBD interaction
+
+```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}**Arc diagram of ACE2-RBD interaction**. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J."}
+#read sequences
+x <- readAAStringSet("data/ACE2.fasta")
+y <- readAAStringSet("data/Spike_RBD.fasta")
+#read protein-protein position
+inter1 <- read.csv("data/6m0j_inter.csv")
+inter2 <- read.csv("data/7wpb_inter.csv")
+#tidy data
+t1 <- tidy_msa(x, start = 19)
+t2 <- tidy_msa(y, start = 331)
+t_merge <- merge_seq(t1, gap = 100, t2)
+h1 <- tidy_hdata(100, inter1, t1, t2)
+h2 <- tidy_hdata(100, inter2, t1, t2)
+#protein-protein interactive plot
+p_interactive <- ggplot() + 
+    geom_msa(data = t_merge,border = NA, font = NULL, seq_name = FALSE) + 
+    theme_msa() + theme(axis.text = element_blank()) + 
+    geom_helix(helix_data = list(known = h1, predicted = h2))
+
+#The output of 'p_interactive' and detail Views
+knitr::include_graphics("data/S11.pdf")
+
+```
+
+\newpage
+
+## Fig. \ref{fig:simp}: A simplified arc diagram of ACE2-RBD interaction
+
+```{r simp, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:simp}**A simplified version of the ACE2-RBD interaction arc plot**. The arc plot only shows the residues at the interaction sites."}
+#simplified p-p interactive  plot
+ACE2 <- t_merge[t_merge$position %in% c(h1$i,h2$i),]
+spike <- t_merge[t_merge$position %in% c(h1$j,h2$j),]
+t1_reset <- reset_pos(ACE2)
+t2_reset <- reset_pos(spike)
+simplify_merge <- merge_seq(previous_seq = t1_reset,
+                            subsequent_seq = t2_reset,
+                            gap = 5,
+                            adjust_name = FALSE)
+
+sim_h1 <- simplify_hdata(hdata = h1, sim_msa = simplify_merge)
+sim_h2 <- simplify_hdata(hdata = h2, sim_msa = simplify_merge)
+
+##break and label
+b <- simplify_merge[simplify_merge$character != "-", "position"] %>% unique()
+l <-  c(inter1$Res.no.1,inter1$Res.no..2,
+        inter2$Res.no.1,inter2$Res.no..2) %>% unique
+
+p_sim <- ggplot() +
+    geom_msa(data = simplify_merge,border = NA, char_width = 0.5, seq_name = FALSE) +
+    ggmsa:::theme_msa() +
+    geom_helix(helix_data = list(known = sim_h1,
+                                 predicted = sim_h2),
+               overlap = FALSE) +
+    geom_text(mapping = aes(x = b,
+                            y = 0.25,
+                            label = l[order(l)]),
+              size = 3) +
+    theme(axis.text.x = element_blank(),
+          axis.text.y = element_blank()) +
+    scale_y_discrete(labels = c("6m0j:A(ACE2)", "7wpb:D(ACE2)")) +
+    geom_text(aes(x = c(27.2,27.2),
+                  y = c(1,2),
+                  label = c("6m0j:A(Spike_RBD)",
+                            "7wpb:D(Spike_RBD)")),
+              size = 3.5) +
+    geom_text(aes(x = c(-1.5,-1.5),
+                  y = c(1,2),
+                  label = c("6m0j:A(ACE2)",
+                            "7wpb:D(ACE2)")),
+              size = 3.5)  + xlim(-2,29)
+p_sim
+```
+
+\newpage
+
+## Table S1: Comparison of ggmsa with popular free MSA visualization tools
+
+We compared MSA visualization methods among ggmsa and other tools (**msa** [@bodenhofer2015msa], **MSAviewer** [@yachdav2016msaviewer], **AliView** [@larsson2014aliview], **Jalview** [@waterhouse2009jalview], **ALVIS** [@schwarz2016alvis])
+
+```{r compare, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=7.5, fig.height=3.2, error=FALSE, fig.cap="\\label{fig:compare}Visualization methods for MSA supported by different software tools, results='asis'."}
+require(kableExtra)
+
+x <- "ggmsa\tR package\tYES\tYES\tYES\trectangular fragmentary circular\tYES\tYES\tprogramming and command line\n
+msa\tR package\tYES\tNO\tYES\trectangular\tNO\tNO\tprogramming and command line\n
+MSAviewer\tWeb service\tYES\tNO\tYES\trectangular\tNO\tNO\tinteractive\n
+AliView\tDesktop application\tNO\tNO\tYES\trectangular\tNO\tNO\tinteractive\n
+Jalview\tDesktop application and web service\tYES\tNO\tYES\trectangular\tNO\tNO\tinteractive\n
+ALVIS\tDesktop application\tYES\tYES\tYES\trectangular\tNO\tNO\tinteractive\n
+"
+
+caption <- "Comparison of ggmsa with popular free MSA visualization tools"
+
+header <- c("Tools","Platform","Sequence Logos","Sequence bundles", 
+            "Stacked MSA[note]", "Layouts for stacked MSA", 
+            "Integrating external data into stacked MSA[note]",
+            "Exploring sequence recombination[note]", "User interface")
+
+# header <- gsub(" ", "\\ ", header) %>%
+#           linebreak(align="l", linebreaker = ",")
+
+ y <-  read.table(text=x, header=F, sep="\t", quote="", check.names=F) 
+compare_tab <-
+   y %>%
+  knitr::kable(
+               caption=caption,
+               col.names=header,
+               booktabs = TRUE,
+               position = "!h",
+               escape=F,
+               align = "c"
+  ) %>%
+  row_spec(0, bold=T) %>%
+  row_spec(row=c(1,2,3,4,5), hline_after=TRUE) %>%
+  kable_styling(
+                latex_options = c("striped"),
+                full_width = TRUE,
+                font_size = 6.6,
+                stripe_color = "gray!10",
+                position="center"
+  )%>%
+  add_footnote(c(
+                 "Stacked MSA: it represents all sequences as rows and homologous residue positions as columns",
+                 "Extended MSA: adding associated into stacked MSA plots",
+                 "A visualization method that designed for detecting sequence recombination signals"
+                 ),
+               notation="number")%>%
+  column_spec(1, width = "5em", latex_valign = "m") %>%
+  column_spec(2, width = "6em", latex_valign = "m")%>%
+  column_spec(3, width = "5em", latex_valign = "m")%>%
+  column_spec(4, width = "7em", latex_valign = "m")%>%
+  column_spec(5, width = "6em", latex_valign = "m")%>%
+  column_spec(6, width = "5em", latex_valign = "m")%>%
+  column_spec(7, width = "5em", latex_valign = "m")%>%
+  column_spec(8, width = "6em", latex_valign = "m")%>%
+  column_spec(9, width = "5em", latex_valign = "m")
+compare_tab
+```
+
+\newpage
+
+
+## Fig. 2A: The combination of sequence logos and sequence bundles (R code)
+
+```{r, fig.height=3, fig.width=8, message=FALSE}
+p2a <- seqlogo("data/Gram-NP-merge.fa", 
+               color = "Chemistry_AA", 
+               font = "DroidSansMono") + 
+   coord_cartesian()
+
+
+negative <-  system.file("extdata", "Gram-negative_AKL.fasta", 
+                         package = "ggmsa")
+positive <-  system.file("extdata", "Gram-positive_AKL.fasta", 
+                         package = "ggmsa")
+
+pos <- data.frame(x= c(4, 7, 9, 24, 27, 29,
+                       4, 7, 24, 27), 
+                  y = c(c(21, 11, 20, 17, 12, 18) +.3,
+                        c(13, 13, 13, 13) +.5
+                        ), 
+                  label = c("H", "S", "R", "D", "T", "E",
+                            "C", "C", "C", "C"),
+                  color = c(rep("#ff4700",6), 
+                            rep("#0443d0",4)))
+
+p2b <- ggSeqBundle(list(negative, positive), 
+                   alpha = 0.1, 
+                   bundle_color = c("#FC8D62","#8DA0CB"))+ #RColorBrewer: Set2:2-3
+  geom_text(data = pos, 
+            mapping = aes(x, y, 
+                          label = label, 
+                          color = I(color)),
+            inherit.aes = FALSE, 
+            size = 4)
+
+plot_list(gglist = list(p2a, p2b), ncol = 1, heights = c(0.3,1))
+```
+**Fig. 2A**| **The combination of sequence logos and sequence bundles**. The data contain the adenylate kinase lid (AKL) domain both of Gram-negative and Gram-negative bacteria. 100 sequences for each group. The sequence logo (top panel) represents the AKL sequence pattern and the sequence bundle (bottom panel) represents the different residues relationship between Gram-negative (orange) and Gram-negative (purple) bacteria. The site at 4, 7, 9, 24, 27, and 29 has an exclusive pattern (His4, Ser7, Arg9, Asp24, Thr27, Glu29) in the Gram-negative sequences. And the site at 4, 7, 24, and 27 both contain the Cysteines in the Gram-positive sequences. These residues relationship in agreement with the structural stability of the AKL domain. Gram-negatives form a hydrogen-bonding network by the exclusive pattern and Gram-positive bound metal ion to form coordinated tetrahedrally by Cys. (Date from BioVis2013 and repeated example from Science Practice)
+
+
+
+##  Fig. 2B: An example of MSA visualization and MSA annotations (R code)
+```{r fig.height = 3, fig.width = 11, warning = FALSE, message = FALSE}
+ ggmsa(protein_sequences, 221, 280, seq_name = TRUE, char_width = 0.5) +
+    geom_seqlogo(color = "Chemistry_AA") +
+        geom_msaBar()
+```
+**Fig. 2B**| **A local visualization of the sequence alignment of the phenylalanine hydroxylase protein (PH4H) within nine species**. The center panel is the main MSA plot with residues in the alignment colored according to the Chemistry color scheme (amino acids are colored according to their side-chain chemistry). The top and bottom panels are corresponding annotations with MSAs, showing the conservation patterns at each position by sequence logos and the distribution of the high-frequency residue by a bar chart, respectively. 
+
+\newpage
+
+## Fig. 3A: Visual methods of surveying RNA co-variation (R code)
+
+```{r  fig.height = 11, fig.width = 10, warning=FALSE}
+p_RF03120_SS <- image_read_svg("data/RF03120_SS.svg")
+q_RF03120_SS <- as.ggplot(p_RF03120_SS)
+
+RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa")
+RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa")
+RF_arc <- readSSfile(RF03120_ss, type = "Vienna" )
+p3a <- ggmsa(RF03120_msa,
+             font = NULL,
+             color = "Chemistry_NT",
+             seq_name = F,
+             show.legend = F,
+             border = NA) +
+  geom_helix(helix_data = RF_arc) +
+  theme(axis.text.y = element_blank())
+require(patchwork)
+layout <- c(
+  area(t = 0, b = 4, l = 1, r = 4),
+  area(t = 0, b = 2, l = 1, r = 2))
+
+p3A <- p3a + q_RF03120_SS + plot_layout(design = layout)
+p3A
+```
+**Fig. 3A**| **Visual methods of surveying RNA co-variation**. The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. Compensatory mutations in MSA can be detected by checking alignment columns in positions corresponding to arcs. 
+
+\newpage
+
+## Fig. 3B: Visual RNA structural changes (R code)
+
+```{r  fig.height=4, fig.width=8, warning=FALSE, message=FALSE}
+color_589 = c(rep("#67a9cf",5),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#008837",1),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#fc8d59",10),
+              rep("#67a9cf",3),
+              rep("#fed976",2),
+              rep("#fc8d59",3),
+              rep("#67a9cf",1),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",2),
+              rep("#67a9cf",5),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fc8d59",6),
+              rep("#67a9cf",4),
+              rep("#008837",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",1),
+              rep("#67a9cf",4),
+              rep("#fed976",2),
+              rep("#67a9cf",5),
+              rep("#969696",1))
+
+color_590 = c(rep("#67a9cf",5),
+              rep("#fed976",2),
+              rep("#67a9cf",3),
+              rep("#008837",1),
+              rep("#fed976",2),
+              rep("#67a9cf",2),
+              rep("#fc8d59",12),
+              rep("#67a9cf",2),
+              rep("#fed976",2),
+              rep("#fc8d59",3),
+              rep("#67a9cf",1),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#008837",2),
+              rep("#67a9cf",4),
+              rep("#fed976",1),
+              rep("#67a9cf",1),
+              rep("#a6dba0",2),
+              rep("#67a9cf",4),
+              rep("#008837",6),
+              rep("#67a9cf",1),
+              rep("#fc8d59",7),
+              rep("#67a9cf",1),
+              rep("#008837",5),
+              rep("#67a9cf",4),
+              rep("#fed976",2),
+              rep("#67a9cf",5),
+              rep("#969696",1))
+
+col <- data.frame(name = c(rep("TPP_Riboswitch_590", time = 83),
+                           rep("TPP_Riboswitch_589", time = 83)),
+                  position = rep(1:83,time=2), 
+                  pos_color = c(color_590,color_589))
+
+
+tpp_seq <- "data/tpp_riboswitch.fasta"
+arc_4NYG <- "data/riboswitch_thiamine.txt"
+arc_4NYD <- "data/riboswitch_hypoxanthine.txt"
+thiamine <- readSSfile(arc_4NYG, type = "Vienna" )
+hypoxanthine <- readSSfile(arc_4NYD, type = "Vienna")
+
+tidy_tpp <- tidy_msa(tpp_seq)
+tidy_tpp <- merge(tidy_tpp, col, by = c("name","position"))
+
+p_double_arc <- ggplot() + 
+  geom_msa(data = tidy_tpp,
+           position_color = TRUE,
+           seq_name = TRUE,
+           border = NA,
+           show.legend = F) +
+  theme_msa() +
+  geom_helix(helix_data = list(known = hypoxanthine,
+                               predicted = thiamine),
+             color_by = "#67a9cf") +
+  theme(axis.text.y = element_blank())
+
+p_loop1 <- image_read_pdf(path = "data/bpRNA_PDB_590_ColorCodedStructures_4NYG.pdf",
+                          density = 300)
+p_loop2 <- image_read_pdf(path = "data/bpRNA_PDB_589_ColorCodedStructures_4NYD.pdf",
+                          density = 300)
+q1 <- as.ggplot(p_loop1)
+q2 <- as.ggplot(p_loop2)
+
+p3B <- (q1/q2) | p_double_arc
+p3B
+```
+**Fig. 3B**| **Exploring RNA structural changes by `geom_helix` annotation**. Stem-loop diagram and arc diagram of secondary structure changes of TPP-riboswitches after bounding to Hypoxanthine and Thiamine respectively. The sequence of the arc plot is the TPP-riboswitch RNA. The arc above the sequence represents the structure of the TPP-riboswitch bound to Thiamine and the bottom arc depicts TPP-riboswitch RNA structural changes binding to Hypoxanthine. The two stem-loop diagrams on the right correspond to the upper and lower arcs respectively. Stem-loop annotation of TPP-riboswitch from bpRNA-1m database (bpRNA ID: bpRNA_PDB_589 and bpRNA_PDB_590), and also corresponding PDB ID: 4NYD, 4NYG.
+
+
+## Fig. 4: Visual exploration for sequence recombination signal (R code)
+
+```{r  fig.height = 11, fig.width = 10, warning=FALSE, message=FALSE}
+fas <- c("data/HM_KP.fa","data/CK_KP.fa")
+xx <- lapply(fas, seqdiff)
+plts <- lapply(xx, plot, width = 100)
+plts[[3]] <- simplot("data/CK_HM_KP.fa", 'KP827649', smooth = FALSE) + 
+  theme(legend.position = "bottom")
+
+plot_list(gglist=plts, ncol=1, tag_levels = list(c("A",' ',"B", ' ',"C")))
+```
+**Fig. 4**| **Visual exploration for sequence recombination signal**. The nucleotide different plots were generated using the comparison of the KP827649 sequence (Tomato Spotted Wilt Virus large RNA genomic segment) with that of (A) HM581979 sequence (Major parent) and (B) KC261971 sequence (Minor parent). (C) The similarity curves investigate the sequence similarity between the KP827649 sequence and potential parents. Two recombination signals (The intersection of two curves in a similarity plot, the start breakpoint is 4534 and the end breakpoint is 5536) were detected in the TSWV LRNA genomic segment. 
+
+## Fig. 5: Visualization of genome alignment in MAF format (R code)
+```{r  fig.height=11, fig.width=12, warning=FALSE, message=FALSE}
+maf <- "data/chr1_KI270707v1_random.txt.maf"
+ref = "hg38.chr1_KI270707v1_random"
+seq_df <- read_maf(maf)
+tidy_df <- tidy_maf_df(seq_df, ref = ref)
+
+ggmaf(data = tidy_df, 
+      ref = ref, 
+      block_start = 1, 
+      block_end = 10, 
+      facet_field = 5,
+      facet_heights = c(0.4,0.6))
+```
+**Fig. 5**| **Visualization of genome alignment in MAF format**. Visualization of the first 10 blocks of different species genomes aligning to  human hg38.chr1. The 10 blocks are divided into two facets: block 1-block 5 is in the first facet, and block 6-block 10 is in the second facet. In each facet, the upper panel shows the original genome coordinates and the lower panel shows genome alignments, with colors indicating positive and negative strands. In the genome alignments panel, the first genome with black border represents the reference genome hg38.chr1 and subsequences in each blocks does not show border color. In each block, the first sequence is the reference genome fragment, followed by other species fragments. Fragments in each block can correspond to labels B1-B10 on the original genome coordinates panel.
+
+
+## Fig. 6A: An example of graphics combination (R code)
+
+```{r  fig.height = 4, fig.width = 15, warning=FALSE}
+##Fig 6A tree + msa + genes locus
+dat <- read.aa(tp53_sequences, format = "fasta") %>% phyDat(type = "AA", levels = NULL)
+tree <- dist.ml(dat, model = "JTT") %>% bionj()
+dd <- ggimage::phylopic_uid(tree$tip.label)
+
+p_tp53 <- ggtree(tree, branch.length = 'none') %<+% dd +
+  geom_tiplab(aes(image=uid), geom = "phylopic", offset =1.9) +
+  geom_tiplab(aes(label=label)) +
+  geom_treescale(x = 0,y = -1)
+#msa
+data_53 <- readAAMultipleAlignment(tp53_sequences) %>% tidy_msa()
+#gene maps
+TP53_arrow <- readxl::read_xlsx(tp53_genes)
+TP53_arrow$direction <- 1
+TP53_arrow[TP53_arrow$strand == "reverse","direction"] <- -1
+
+#color
+mapping = aes(xmin = start, xmax = end, fill = gene, forward = direction)
+my_pal <- colorRampPalette(rev(brewer.pal(n = 10, name = "Set3")))
+
+#tree + gene maps + msa
+p6a <- p_tp53  + xlim_tree(4) +
+  geom_facet(geom = geom_msa, data = data_53,
+             panel = 'Multiple Sequence Alignment of the TP53 Protein', font = NULL,
+             border = NA) +
+  new_scale_fill() +
+  scale_fill_manual(values = my_pal(10)) +
+  geom_facet(geom = geom_motif,
+             mapping = mapping, data = TP53_arrow,
+             panel = 'Genome_Locus',  on = 'TP53',
+             arrowhead_height = unit(3, "mm"),
+             arrowhead_width = unit(1, "mm")) +
+  theme(strip.background=element_blank(),
+        strip.text = element_text(size = 13))
+p6A <- facet_widths(p6a, c(Tree = 0.35, Genome_Locus = 0.3))
+p6A
+```
+**Fig. 6A**| **An example of graphics combination**. The MSA-tree panel in conjunction with the external genome locus data set. Comparative genome locus structure (genome_Locus panel), sequence alignment of TP53 protein (the middle panel), and the corresponding phylogenetic tree (Tree panel) among six species. The local genome map shows the 30000 sites around the TP53 gene, and the phylogenetic tree that represents evolutionary relationships inferred from TP53 protein sequences using the Neighbor-Joining method based on the evolutionary distances of the JTT matrix-based method.
+
+
+## Fig. 6B: Another example of graphics combination (R code)
+
+```{r  fig.height = 13, fig.width = 16, warning=FALSE}
+##Fig 6B tree + msa + 2boxplot
+seq <-readDNAStringSet("data//btuR.fa")
+aln <- tidy_msa(seq)
+btuR_tree <- read.tree("data/btuR.nwk")
+meta_dat <- read.csv("data/meta_data_47.csv")
+
+#Pathotype_fill_colors
+Pathotype_cols <- RColorBrewer::brewer.pal(7, "Set3")
+names(Pathotype_cols) <- meta_dat$Pathotypes %>% factor %>% levels
+
+###tree OTU
+Phylo_group <- list(A= meta_dat$Lineage[meta_dat$Phylogroup == "A"]%>% unique,
+                    B1=meta_dat$Lineage[meta_dat$Phylogroup == "B1"]%>% unique,
+                    B2=meta_dat$Lineage[meta_dat$Phylogroup == "B2"]%>% unique,
+                    C=meta_dat$Lineage[meta_dat$Phylogroup == "C"]%>% unique,
+                    D =meta_dat$Lineage[meta_dat$Phylogroup == "D"]%>% unique,
+                    E =meta_dat$Lineage[meta_dat$Phylogroup == "E"]%>% unique,
+                    `F`=meta_dat$Lineage[meta_dat$Phylogroup == "F"]%>% unique,
+                    Shigella=meta_dat$Lineage[meta_dat$Phylogroup == "Shigella"]%>% unique)
+
+Phylo_cols <- RColorBrewer::brewer.pal(8, "Dark2")
+names(Phylo_cols) <- names(Phylo_group)
+
+## plot tree
+p_btuR_tree <- ggtree(btuR_tree) + geom_tiplab(align = TRUE)
+p_btuR_tree <- groupOTU(p_btuR_tree ,Phylo_group)+aes(color=group)  +
+  scale_color_manual(values = c(Phylo_cols, "black"), na.value = "black", name = "Lineage",
+                     breaks = c("A", "B1", "B2", "C", "D", "E", "F", "Shigella"),  guide="none")
+
+p_btuR_tree <- p_btuR_tree +
+  geom_strip('L29', 'L20', barsize=2, color=Phylo_cols[["B2"]],
+             label="B2",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L28','L29', barsize=2, color=Phylo_cols[["A"]],
+             label="A",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L15','L28', barsize=2, color=Phylo_cols[["B1"]],
+             label="B1",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L45','L15', barsize=2, color=Phylo_cols[["Shigella"]],
+             label="S.",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L36','L45', barsize=2, color=Phylo_cols[["B1"]],
+             label="B1",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L30','L36', barsize=2, color=Phylo_cols[["Shigella"]],
+             label="S.",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L39','L30', barsize=2, color=Phylo_cols[["B1"]],
+             label="B1",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L40','L39', barsize=2, color=Phylo_cols[["C"]],
+             label="C",offset =.01,  offset.text = 0.0015)  +
+  geom_strip('L48','L40', barsize=2, color=Phylo_cols[["B1"]],
+             label="B1",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L10','L48', barsize=2, color=Phylo_cols[["E"]],
+             label="E",offset =.01,  offset.text = 0.0015) +
+  geom_strip('L37','L10', barsize=2, color=Phylo_cols[["D"]],
+             label="D",offset =.01,  offset.text = 0.0015)+
+  geom_strip('L33','L37', barsize=2, color=Phylo_cols[["F"]],
+             label="F",offset =.01,  offset.text = 0.0015)+
+  geom_strip('L1','L33', barsize=2, color=Phylo_cols[["E"]],
+             label="E",offset =.01,  offset.text = 0.0015)
+
+##tree + meta data boxplots
+p6B <- p_btuR_tree  +
+  geom_treescale(x = 0,y = -1) +
+  geom_fruit(data = aln,
+             geom = geom_msa,
+             end = 200,
+             font = NULL,
+             color = "Chemistry_NT",
+             border = NA,
+             consensus_views = TRUE, 
+             ref = "L38",
+             pwidth = 3.5,
+             offset = 0.3,
+             axis.params = list(title = "Multiple Sequence Alignment of the btuR Gene",
+                                title.height = 0.05,
+                                title.size = 4.5,
+                                axis = "x",
+                                vjust = 1.1,
+                                text.size = 3,
+                                line.size = 1,
+                                line.color = "black")) +
+  new_scale_fill() +
+  geom_fruit(mapping = aes(x = AMR_genes, y = Lineage, fill = MDR),
+             data = meta_dat,
+             geom = geom_boxplot,
+             outlier.size = 0.5,
+             pwidth=1,
+             offset = 0.1,
+             axis.params = list(title = "Antimicrobial Classes",
+                                title.height = 0.05,
+                                title.size = 4.5,
+                                axis = "x",
+                                vjust = 1.1,
+                                text.size = 3,
+                                line.size = 1,
+                                line.color = "black")) +
+  scale_fill_manual(values=c("Yes" = "#fcd7c5", "No" = "#dfdfdf")) +
+  new_scale_fill() +
+  geom_fruit(mapping = aes(x = virulence_genes, y = Lineage, fill = Pathotypes),
+             data = meta_dat,
+             geom = geom_boxplot,
+             pwidth=1,
+             offset = 0.05,
+             axis.params = list(title = "Virulence Genes",
+                                title.height = 0.05,
+                                title.size = 4.5,
+                                axis = "x",
+                                vjust = 1.1,
+                                text.size = 3,
+                                line.size = 1,
+                                line.color = "black"))+
+  scale_fill_manual(values = Pathotype_cols)
+
+p6B
+```
+**Fig. 6B**| **Another example of graphics combination**. The summarized visualization for different E.coli lineages. The alignment of the btuR gene was selected to generate a phylogenetic tree which was stained according to the corresponding lineages. The boxplots represent antimicrobial resistance (AMR) and virulence profiles of the lineages. A number of antimicrobial classes and virulence genes per isolate are colored by multidrug-resistant (MDR) classes and the most prevalent predicted pathotype in the lineage.
+
+
+
+ Here is the output of sessionInfo() on the system on which this document was compiled:
+```{r echo = FALSE}
+sessionInfo()
+```
+
+
+&nbsp;
+
+\newpage
+
+## References
+
+
+<!-- ##  Fig. 3B: The external data genome locus in conjunction with the MSA-tree plot (R code)  -->
+<!-- ```{r fig.height=4, fig.width=14, message=FALSE, warning=FALSE} -->
+<!-- library(phangorn) -->
+<!-- #tree -->
+<!-- dat <- read.aa(tp53_sequences, format = "fasta") %>% phyDat(type = "AA", levels = NULL) -->
+<!-- tree <- dist.ml(dat, model = "JTT") %>% bionj() -->
+<!-- dd <- ggimage::phylopic_uid(tree$tip.label) -->
+
+<!-- p_tp53 <- ggtree(tree, branch.length = 'none') %<+% dd +  -->
+<!--   geom_tiplab(aes(image=uid), geom = "phylopic", offset =1.9) + -->
+<!--   geom_tiplab(aes(label=label))  -->
+<!-- #msa -->
+<!-- data_53 <- readAAMultipleAlignment(tp53_sequences) %>% tidy_msa() -->
+<!-- #gene maps -->
+<!-- TP53_arrow <- readxl::read_xlsx(tp53_genes) -->
+<!-- TP53_arrow$direction <- 1 -->
+<!-- TP53_arrow[TP53_arrow$strand == "reverse","direction"] <- -1 -->
+
+<!-- #color -->
+<!-- mapping = aes(xmin = start, xmax = end, fill = gene, forward = direction) -->
+<!-- my_pal <- colorRampPalette(rev(brewer.pal(n = 10, name = "Set3"))) -->
+
+<!-- #tree + gene maps + msa -->
+<!-- pb <- p_tp53  + xlim_tree(4) + -->
+<!--     geom_facet(geom = geom_msa, data = data_53, -->
+<!--                panel = 'msa', font = NULL, -->
+<!--                   border = NA) + -->
+<!--     new_scale_fill() + -->
+<!--     scale_fill_manual(values = my_pal(10)) + -->
+<!--     geom_facet(geom = geom_motif, -->
+<!--                mapping = mapping, data = TP53_arrow, -->
+<!--                panel = 'genes',  on = 'TP53', -->
+<!--                arrowhead_height = unit(3, "mm"), -->
+<!--                arrowhead_width = unit(1, "mm")) -->
+
+<!-- facet_widths(pb, c(Tree = 0.35, genes = 0.3)) -->
+<!-- ``` -->
+<!-- **Fig. 3B**|The external data, genome locus, in conjunction with the MSA-tree plot. Comparative genome locus structure (genes panel), sequence alignment of TP53 protein (msa panel) and the corresponding phylogenetic tree (Tree panel) among six organisms. The local genome map shows the 30000 sites around the TP53 gene, and the phylogenetic tree that represents evolutionary relationships of TP53 protein was inferred using the Neighbor-Joining method based on the evolutionary distances of JTT matrix-based method. The Danio rerio shows strong inconsistent in the alignment and remote evolutionary relationships in the tree comparing other organisms. And the inconsistent is also discovered in local genome map panel (e.g. linkage disequilibrium of TP53-WRAP53 locus deletions, the direction of transcription and the variety of neighboring genes). This combined visualization interprets the variant concordance of the TP53 molecule between molecular sequences and genome locus structures. -->
+
+
+
+
+
+<!-- ##  Fig. 4C: RNA secondary structure annotation for a MSA (R code)  -->
+
+<!-- ```{r fig.height = 3, fig.width = 8, message=F, warning=F} -->
+<!-- RF03120_msa<- system.file("extdata", "Rfam", "RF03120.fasta", package = "ggmsa") -->
+<!-- RF03120_ss <- system.file("extdata", "Rfam", "RF03120_SS.txt", package = "ggmsa") -->
+
+<!-- known <- readSSfile(RF03120_ss, type = "Vienna" ) -->
+
+<!-- ggmsa(RF03120_msa,  -->
+<!--       font = NULL,  -->
+<!--       color = "Chemistry_NT",  -->
+<!--       seq_name = F,  -->
+<!--       show.legend = T,  -->
+<!--       border = NA) + -->
+<!--   geom_helix(helix_data = known) +  -->
+<!--   theme(axis.text.y = element_blank()) -->
+<!-- ``` -->
+<!-- **Fig. 4C**|An example of visualizing MSAs in conjunction with RNA secondary structure. The data from the Rfam database [family RF03120] include 19 seed alignments of Sarbecovirus 5'UTR (including 6 SARS-CoV-2 isolates sequences) and the corresponding consensus RNA secondary structure. The extra RNA secondary structure data integrated with MSA plot as arc diagrams and helices were colored according to the base-pair group. The 5′ UTR within the Sarbecovirus is responsible for important biological functions, such as viral replication, transcription and packaging. And it has a conserved RNA secondary structure on common Coronavirus genera. The graphical combination of the alignment and secondary structures reveals the co-variation of Sarbecovirus 5'UTR that retains the base-pairing ability, but changes the base-pairing nucleotides, and is strong evidence for RNA structure conservation. -->
+
+<!-- ##  Fig. 5: Examples of detecting sequence recombination signals (R code)  -->
+
+<!-- ```{r fig.height = 10, fig.width = 10, message=F, warning=F} -->
+<!-- library(aplot) -->
+<!-- library(ggplotify) -->
+<!-- library(patchwork) -->
+
+<!-- fas <- list.files(system.file("extdata", "GVariation", package="ggmsa"),  -->
+<!--                   pattern="fas", full.names=TRUE) -->
+<!-- fas <- fas[-3] -->
+
+<!-- xx <- lapply(fas, seqdiff) -->
+<!-- plts <- lapply(xx, plot) -->
+<!-- plts[[3]] <- simplot(fas, 'CF_YL21') -->
+
+<!-- plot_list(lapply(plts, function(i)as.ggplot(i)), ncol = 1) +  -->
+<!--   plot_annotation(tag_levels = "A") -->
+<!-- ``` -->
+<!-- **Fig. 5**| Examples of detecting sequence recombination signals. CF_YL21 is a Potato virus Y (PVY) isolate from Solanum tuberosum in China. PVYN (Mont, AY884983) and PVYO (Oz, EF026074) were chosen as potential parents. (A) The comparison of CF_YL21 sequence with Mont. The x-axis corresponds to nucleotide position along the CF_YL21 genome, and the y-axis is the number of nucleotide differences between the genomes. Bar charts indicate number of base differences in every 50 sites (B) The comparison of CF_YL21 sequence with Oz (C) Detection and verification of recombination breakpoints in PVY CF_YL21 using PVYN and PVYO as reference strains. Two recombination signals (The intersection of line, site of 309 and 2224) were detected in the CF_YL21 genome. -->
+
+<!-- &nbsp; -->
+<!-- &nbsp; -->
+
+
+
