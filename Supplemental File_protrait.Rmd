@@ -300,7 +300,7 @@ p
 
 ## Fig. \ref{fig:pp_all}: Arc diagram of ACE2-RBD interaction
 
-```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}**Arc diagram of ACE2-RBD interaction**. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J."}
+```{r eval=FALSE}
 #read sequences
 x <- readAAStringSet("data/ACE2.fasta")
 y <- readAAStringSet("data/Spike_RBD.fasta")
@@ -318,10 +318,11 @@ p_interactive <- ggplot() +
     geom_msa(data = t_merge,border = NA, font = NULL, seq_name = FALSE) + 
     theme_msa() + theme(axis.text = element_blank()) + 
     geom_helix(helix_data = list(known = h1, predicted = h2))
+```
 
+```{r pp_all, fig.height=5, fig.width=10, warning=FALSE, message=FALSE, fig.cap="\\label{fig:pp_all}**Arc diagram of ACE2-RBD interaction**. The two sequences on the left panel are ACE2, and the two sequences on the right panel are RBD sequences of S protein of wild-type and Omicron, respectively. ACE2 and RBD are placed in the same horizontal position, and the residual sites that generated hydrogen bonds were connected by arcs. The upper arc represents the ACE2-Omicron_RBD and the lower arc represents the ACE2-WT_RBD. Data of interacting sites was obtained from the PDBsum database, and the corresponding PDB ID were 7WPB and 6M0J. Part of the interaction. Sub-sequences that are involved in the interactions are zoom-in in the insets A, B, and C. ", echo=FALSE, out.width="100%"}
 #The output of 'p_interactive' and detail Views
 knitr::include_graphics("data/S11.pdf")
-
 ```
 
 \newpage
